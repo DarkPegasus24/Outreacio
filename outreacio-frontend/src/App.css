@@ -1,0 +1,8 @@
+/* Outreacio App Layout Styles */
+.outreacio-app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f7f7f4;
+  background: #f7f7f4;
+}
