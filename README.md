@@ -1,53 +1,56 @@
-# Outreacio — Simple Bulk Email Sender
+# Outreacio
 
-**Outreacio** sends personalized bulk emails directly through your **Gmail or Google Workspace** account. No complex setup. No copy-paste. Just fast, smart cold outreach.
-
----
-
-## ⚡ What It Does
-- ✅ **Easy List Upload:** Drag-and-drop your CSV or copy-paste emails. We automatically check them for formatting and validity.
-- ✅ **30-Second Gmail Setup:** Connect your Gmail with a Google App Password. One click tests that everything works.
-- ✅ **Personal Touch:** Use `{{Company Name}}` and `{{Email}}` tags so every message feels custom-written.
-- ✅ **Safe Speed Control:** Built-in speed slider (2–3 seconds per email) protects your inbox from spam flags.
-- ✅ **Live Delivery Tracker:** Watch emails send live with real-time counters and download a CSV report when done.
-- ✅ **100% Secure:** Your password is only used while sending and is never saved to disk or database.
+A bulk email automation application for sending personalized emails through a Gmail or Google Workspace account.
 
 ---
 
-## 📧 Gmail Setup (Takes 2 Minutes)
+## What It Does
+
+- **Flexible List Upload:** Upload a recipient list as an Excel file (.xlsx or .xls). Any column layout works — Outreacio automatically detects which column contains email addresses and which contains company names. Rows without a valid email are skipped automatically.
+- **Gmail Integration:** Connect your Gmail account using a Google App Password with connection verification before sending.
+- **Dynamic Personalization:** Use `{{Company Name}}` and `{{Email}}` placeholder tags to personalize each outgoing email.
+- **Configurable Rate Limiting:** Adjustable throttle delay between consecutive emails to maintain deliverability standards.
+- **Real-Time Monitoring:** Live progress tracking with sent and failure counters, server-sent events stream, and exportable reports.
+- **In-Memory Credential Handling:** Credentials are held in memory during the active session and are never written to disk or persistent storage.
+
+---
+
+## Gmail Setup
 
 1. **Enable 2-Step Verification:**
-   - Open your Google Account: [myaccount.google.com](https://myaccount.google.com)
-   - Go to **Security** &rarr; turn ON **2-Step Verification**.
+   - Open your Google Account settings at [myaccount.google.com](https://myaccount.google.com).
+   - Navigate to **Security** and enable **2-Step Verification**.
 
-2. **Create an App Password:**
-   - Visit: [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)
-   - Generate a 16-character password (e.g., `abcd efgh ijkl mnop`).
-   - Copy this 16-character password.
+2. **Generate an App Password:**
+   - Visit [myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords).
+   - Create a 16-character App Password (for example, `abcd efgh ijkl mnop`).
+   - Copy the generated 16-character password.
 
-3. **Paste in Outreacio:**
-   - Enter your Gmail address and paste the 16-char App Password.
-   - Click **"Test Gmail"** &bull; ready to send!
+3. **Connect in Outreacio:**
+   - Enter your Gmail address and paste the 16-character App Password.
+   - Click **Test Gmail Connection** to verify credentials before proceeding.
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Install All Dependencies
+
 ```bash
 npm run install-all
 ```
 
 ### 2. Run Locally
+
 ```bash
 npm run dev
 ```
 
-Open **`http://localhost:5173`** in your browser.
+Open [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
-## 📁 Clean Structure
+## Project Structure
 
 ```
 outreacio/
@@ -78,4 +81,5 @@ outreacio/
 ---
 
 ## License
-MIT &bull; Outreacio 1.0.0
+
+MIT - Outreacio 1.0.0
