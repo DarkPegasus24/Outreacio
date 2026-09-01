@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.env
+.env.local
+*.log
+.DS_Store
+.vscode/
+.idea/
+*.swp
+outreacio-frontend/dist/
+outreacio-frontend/node_modules/
+outreacio-backend/node_modules/

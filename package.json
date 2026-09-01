@@ -1,0 +1,25 @@
+{
+  "name": "outreacio",
+  "version": "1.0.0",
+  "description": "Outreacio — Professional bulk email automation platform",
+  "private": true,
+  "scripts": {
+    "install-all": "npm install && npm --prefix outreacio-frontend install && npm --prefix outreacio-backend install",
+    "build": "npm --prefix outreacio-frontend run build",
+    "start": "npm --prefix outreacio-backend start",
+    "dev": "concurrently \"npm --prefix outreacio-backend run server\" \"npm --prefix outreacio-frontend run dev\"",
+    "backend": "npm --prefix outreacio-backend run server",
+    "frontend": "npm --prefix outreacio-frontend run dev"
+  },
+  "keywords": [
+    "email",
+    "bulk-sender",
+    "automation",
+    "outreach"
+  ],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
