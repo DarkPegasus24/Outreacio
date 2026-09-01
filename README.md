@@ -80,6 +80,18 @@ outreacio/
 
 ---
 
+## Contributing
+
+For guidelines on local setup, code style, and submitting pull requests, see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+---
+
+## Security
+
+For vulnerability reporting procedures and credential handling details, see [SECURITY.md](./SECURITY.md).
+
+---
+
 ## License
 
-MIT - Outreacio 1.0.0
+This project is licensed under the MIT License, Copyright (c) 2026 8ByteStudio. See [LICENSE](./LICENSE) for details.
