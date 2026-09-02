@@ -1,10 +1,26 @@
-import React, { useState } from 'react';
-import { Eye, EyeOff, CheckCircle2, AlertCircle, RefreshCw, KeyRound, Mail, User, ShieldCheck, ExternalLink, ArrowRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Eye, EyeOff, CheckCircle2, AlertCircle, RefreshCw, KeyRound, Mail, ShieldCheck, ExternalLink, ArrowRight, ArrowUp } from 'lucide-react';
 
 export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified, onVerifiedChange, onContinue }) {
   const [showPassword, setShowPassword] = useState(false);
   const [testing, setTesting] = useState(false);
   const [testResult, setTestResult] = useState(isVerified ? { success: true, message: 'Gmail connected successfully! Ready to send emails.' } : null);
+
+  const hasCredentials = Boolean(config.user?.trim() && config.pass?.trim());
+
+  // Pre-fill last used Gmail address from localStorage on mount (App Password is NEVER stored)
+  useEffect(() => {
+    if (!config.user) {
+      try {
+        const savedEmail = localStorage.getItem('outreacio_last_gmail_address');
+        if (savedEmail && typeof savedEmail === 'string' && savedEmail.trim()) {
+          onChange({ ...config, user: savedEmail.trim() });
+        }
+      } catch (e) {
+        // Silently fail if localStorage is restricted
+      }
+    }
+  }, []);
 
   const handleTestConnection = async () => {
     if (!config.user || !config.pass) {
@@ -40,6 +56,11 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
           success: true,
           message: 'Gmail connected successfully! Ready to send emails.'
         });
+        try {
+          localStorage.setItem('outreacio_last_gmail_address', config.user.trim());
+        } catch (e) {
+          // Silently fail
+        }
         onVerifiedChange?.(true);
       } else {
         setTestResult({
@@ -69,6 +90,17 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
       maxWidth: '860px',
       margin: '0 auto'
     }}>
+      <style>{`
+        @keyframes bounceUpSoft {
+          0%, 100% { transform: translateY(0); }
+          50% { transform: translateY(-4px); }
+        }
+        @keyframes bounceRightSoft {
+          0%, 100% { transform: translateX(0); }
+          50% { transform: translateX(4px); }
+        }
+      `}</style>
+
       {/* Card Header */}
       <div style={{
         display: 'flex',
@@ -89,30 +121,56 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleTestConnection}
-          disabled={testing || !config.user || !config.pass}
-          className="btn btn-secondary btn-sm"
-          style={{
-            borderColor: isVerified ? 'var(--success)' : undefined,
-            color: isVerified ? '#128a4d' : undefined,
+        {/* Test Connection Button with Guiding Arrow Pointer */}
+        <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+          <button
+            type="button"
+            onClick={handleTestConnection}
+            disabled={testing || !config.user || !config.pass}
+            className="btn btn-secondary btn-sm"
+            style={{
+              borderColor: isVerified ? 'var(--success)' : undefined,
+              color: isVerified ? '#128a4d' : undefined,
+              fontWeight: '600',
+              padding: '8px 16px'
+            }}
+          >
+            {testing ? (
+              <>
+                <RefreshCw size={14} className="spinning" />
+                <span>Checking Connection...</span>
+              </>
+            ) : (
+              <>
+                {isVerified ? <CheckCircle2 size={15} color="var(--success)" /> : <Mail size={15} />}
+                <span>Test Gmail Connection</span>
+              </>
+            )}
+          </button>
+
+          {/* Guiding Arrow 1: Pointing up at Test Gmail */}
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            right: '8px',
+            marginTop: '6px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            color: 'var(--accent)',
+            fontSize: '12px',
             fontWeight: '600',
-            padding: '8px 16px'
-          }}
-        >
-          {testing ? (
-            <>
-              <RefreshCw size={14} className="spinning" />
-              <span>Checking Connection...</span>
-            </>
-          ) : (
-            <>
-              {isVerified ? <CheckCircle2 size={15} color="var(--success)" /> : <Mail size={15} />}
-              <span>Test Gmail Connection</span>
-            </>
-          )}
-        </button>
+            opacity: hasCredentials && !isVerified ? 1 : 0,
+            transform: hasCredentials && !isVerified ? 'translateY(0)' : 'translateY(6px)',
+            transition: 'opacity 0.4s ease, transform 0.4s ease',
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+            animation: hasCredentials && !isVerified ? 'bounceUpSoft 1.2s ease-in-out infinite' : 'none'
+          }}>
+            <ArrowUp size={14} />
+            <span>Click here first</span>
+          </div>
+        </div>
       </div>
 
       {/* Gmail Setup Instructions Banner */}
@@ -152,23 +210,8 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
         </div>
       </div>
 
-      {/* Form Fields Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '18px', marginBottom: '20px' }}>
-        {/* Sender Name */}
-        <div>
-          <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-            <User size={14} color="var(--accent)" /> Your Name / Company <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(Optional)</span>
-          </label>
-          <input
-            type="text"
-            className="input"
-            placeholder="e.g. Alex from Acme"
-            value={config.senderName || ''}
-            onChange={(e) => onChange({ ...config, senderName: e.target.value })}
-            style={{ height: '42px' }}
-          />
-        </div>
-
+      {/* Form Fields Grid: 2 Fields (Gmail Address & 16-Character App Password) */}
+      <div className="form-grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '18px', marginBottom: '20px' }}>
         {/* Gmail Address */}
         <div>
           <label className="form-label" style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
@@ -253,8 +296,8 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
         </div>
       )}
 
-      {/* Unified Card Footer: Security Note + Continue Action */}
-      <div style={{
+      {/* Unified Card Footer: Security Note + Continue Action with Guiding Arrow */}
+      <div className="card-footer-responsive" style={{
         paddingTop: '20px',
         borderTop: '1px solid var(--border)',
         display: 'flex',
@@ -274,12 +317,32 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
           <span>Password not saved on our servers. Stored in temporary memory only.</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
+          {/* Guiding Arrow 2: Pointing at Continue to Recipients */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            color: 'var(--accent)',
+            fontSize: '13px',
+            fontWeight: '600',
+            opacity: isVerified ? 1 : 0,
+            transform: isVerified ? 'translateX(0)' : 'translateX(-8px)',
+            transition: 'opacity 0.4s ease, transform 0.4s ease',
+            pointerEvents: 'none',
+            whiteSpace: 'nowrap',
+            animation: isVerified ? 'bounceRightSoft 1.2s ease-in-out infinite' : 'none'
+          }}>
+            <span>Click here to continue</span>
+            <ArrowRight size={15} />
+          </div>
+
           {!isVerified && (
             <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
               Test your Gmail connection first.
             </span>
           )}
+
           <button
             type="button"
             disabled={!isVerified}
