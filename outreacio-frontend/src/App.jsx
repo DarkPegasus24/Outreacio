@@ -11,6 +11,7 @@ import EmailComposer from './components/EmailComposer';
 import CampaignMonitor from './components/CampaignMonitor';
 import CampaignHistory from './components/CampaignHistory';
 import LoginPage from './components/LoginPage';
+import PageTransitionLoader from './components/PageTransitionLoader';
 import { supabase } from './supabaseClient';
 import './App.css';
 
@@ -30,13 +31,19 @@ export default function App() {
           name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0],
           picture: u.user_metadata?.avatar_url || u.user_metadata?.picture || ''
         });
+
+        // If landing with OAuth tokens, immediately switch to dashboard and clean hash
+        if (window.location.hash.includes('access_token') || window.location.hash === '#') {
+          setCurrentView('dashboard');
+          window.history.replaceState({ view: 'dashboard' }, '', '/dashboard');
+        }
       } else {
         setUser(null);
       }
       setAuthLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         const u = session.user;
         setUser({
@@ -45,6 +52,12 @@ export default function App() {
           name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0],
           picture: u.user_metadata?.avatar_url || u.user_metadata?.picture || ''
         });
+
+        // Direct user to Dashboard on sign-in or OAuth callback, and remove all hash fragments
+        if (event === 'SIGNED_IN' || window.location.hash.includes('access_token') || window.location.hash === '#') {
+          setCurrentView('dashboard');
+          window.history.replaceState({ view: 'dashboard' }, '', '/dashboard');
+        }
       } else {
         setUser(null);
       }
@@ -78,28 +91,38 @@ export default function App() {
     };
   }, []);
 
-  // Determine initial view from window.location pathname / hash
+  // Determine initial view purely from clean URL pathname (no # hash tags)
   const getInitialView = () => {
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
-    if (path.includes('login') || hash.includes('login')) {
-      return 'login';
-    }
-    if (path.includes('dashboard') || hash.includes('dashboard')) {
+
+    // If returning from OAuth redirect with access_token in hash, start on dashboard
+    if (hash.includes('access_token') || path.includes('dashboard')) {
       return 'dashboard';
     }
-    if (path.includes('contact') || hash.includes('contact')) {
+    if (path.includes('login')) {
+      return 'login';
+    }
+    if (path.includes('contact')) {
       return 'contact';
     }
     return 'landing'; // Default starting page is the Landing Page
   };
 
   const [currentView, setCurrentView] = useState(getInitialView);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionTarget, setTransitionTarget] = useState('landing');
   const [wizardStep, setWizardStep] = useState(1);
   const [isGmailVerified, setIsGmailVerified] = useState(false);
 
-  // Sync document title and browser URL whenever view changes
+  // Sync document title and clean browser URL without any # hash tags
   useEffect(() => {
+    // Strip any lingering hash if present in URL
+    if (window.location.hash) {
+      const cleanPath = currentView === 'dashboard' ? '/dashboard' : (currentView === 'contact' ? '/contact' : (currentView === 'login' ? '/login' : '/'));
+      window.history.replaceState({ view: currentView }, '', cleanPath);
+    }
+
     if (currentView === 'landing') {
       document.title = 'Outreacio | Bulk Email Automation Platform';
       if (window.location.pathname !== '/' && window.location.pathname !== '/landing') {
@@ -143,8 +166,26 @@ export default function App() {
   }, []);
 
   const navigateToView = (view) => {
-    setCurrentView(view);
+    if (view === currentView && !isTransitioning) return;
+
+    // Instant navigation for landing page (no loader)
+    if (view === 'landing') {
+      setIsTransitioning(false);
+      setCurrentView('landing');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    // Smooth transition loader for Dashboard, Contact, and Login
+    setTransitionTarget(view);
+    setIsTransitioning(true);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    setTimeout(() => {
+      setCurrentView(view);
+      setIsTransitioning(false);
+      window.scrollTo({ top: 0 });
+    }, 1800); // 1.8 seconds smooth transition loader
   };
 
   const handleLaunchApp = () => {
@@ -302,11 +343,21 @@ export default function App() {
 
       const base64Attachments = await Promise.all(attachments.map(fileToBase64));
 
+      const { data: { session } } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        alert('Your session has expired. Please sign in again.');
+        navigateToView('login');
+        return;
+      }
+
       const response = await fetch('/api/send-batch', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken
+          'x-csrf-token': csrfToken,
+          'Authorization': `Bearer ${accessToken}`
         },
         body: JSON.stringify({
           smtpConfig: {
@@ -475,43 +526,47 @@ export default function App() {
         onClose={() => setIsHelpOpen(false)}
       />
 
-      {currentView === 'login' && (
-        <LoginPage 
-          onLoginSuccess={handleLoginSuccess}
-          onNavigateHome={() => navigateToView('landing')}
-        />
-      )}
+      {isTransitioning ? (
+        <PageTransitionLoader targetView={transitionTarget} />
+      ) : (
+        <>
+          {currentView === 'login' && (
+            <LoginPage 
+              onLoginSuccess={handleLoginSuccess}
+              onNavigateHome={() => navigateToView('landing')}
+            />
+          )}
 
-      {currentView === 'landing' && (
-        <LandingPage 
-          onLaunchApp={handleLaunchApp} 
-          onNavigateContact={() => navigateToView('contact')}
-        />
-      )}
+          {currentView === 'landing' && (
+            <LandingPage 
+              onLaunchApp={handleLaunchApp} 
+              onNavigateContact={() => navigateToView('contact')}
+            />
+          )}
 
-      {currentView === 'contact' && (
-        <ContactPage 
-          onLaunchApp={handleLaunchApp} 
-        />
-      )}
+          {currentView === 'contact' && (
+            <ContactPage 
+              onLaunchApp={handleLaunchApp} 
+            />
+          )}
 
-      {currentView === 'dashboard' && (
-        !authLoading && !user ? (
-          <LoginPage 
-            onLoginSuccess={handleLoginSuccess}
-            onNavigateHome={() => navigateToView('landing')}
-          />
-        ) : (
-        <main style={{
-          maxWidth: '960px',
-          margin: '0 auto',
-          width: '100%',
-          flex: 1,
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'center',
-          padding: '32px 16px 60px'
-        }}>
+          {currentView === 'dashboard' && (
+            !authLoading && !user ? (
+              <LoginPage 
+                onLoginSuccess={handleLoginSuccess}
+                onNavigateHome={() => navigateToView('landing')}
+              />
+            ) : (
+            <main style={{
+              maxWidth: '960px',
+              margin: '0 auto',
+              width: '100%',
+              flex: 1,
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              padding: '32px 16px 60px'
+            }}>
           {/* Top-Level Dashboard Navigation Tabs (New Campaign vs History) */}
           <div className="dashboard-top-tabs" style={{
             display: 'flex',
@@ -661,6 +716,8 @@ export default function App() {
           )}
         </main>
         )
+      )}
+        </>
       )}
     </div>
   );
