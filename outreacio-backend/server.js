@@ -24,7 +24,10 @@ app.use(helmet({
     contentSecurityPolicy: false // Allow modern UI scripts/styles in dev & production
 }));
 app.use(cors({
-    origin: true,
+    origin: [
+        'http://localhost:5173',
+        'https://outreacio.vercel.app'
+    ],
     credentials: true
 }));
 app.use(cookieParser());
