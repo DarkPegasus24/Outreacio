@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { History, RefreshCw, Trash2, Search, CheckCircle2, XCircle, Clock, Mail, AlertCircle, Sparkles } from 'lucide-react';
+import { supabase } from '../supabaseClient';
 
 export default function CampaignHistory({ csrfToken, onSwitchToNewCampaign }) {
   const [history, setHistory] = useState([]);
@@ -8,11 +9,17 @@ export default function CampaignHistory({ csrfToken, onSwitchToNewCampaign }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [deletingId, setDeletingId] = useState(null);
 
+  const getAuthHeader = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {};
+  };
+
   const fetchHistory = async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch('/api/campaign-history');
+      const authHeader = await getAuthHeader();
+      const res = await fetch('/api/campaign-history', { headers: { ...authHeader } });
       const json = await res.json();
       if (res.ok && json.success) {
         setHistory(json.data || []);
@@ -35,10 +42,12 @@ export default function CampaignHistory({ csrfToken, onSwitchToNewCampaign }) {
 
     setDeletingId(id);
     try {
+      const authHeader = await getAuthHeader();
       const res = await fetch(`/api/campaign-history/${id}`, {
         method: 'DELETE',
         headers: {
-          'x-csrf-token': csrfToken || ''
+          'x-csrf-token': csrfToken || '',
+          ...authHeader
         }
       });
       const json = await res.json();

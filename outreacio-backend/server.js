@@ -55,6 +55,30 @@ function verifyCsrf(req, res, next) {
     next();
 }
 
+// Middleware to verify the logged-in Supabase user from the Authorization header.
+// Ensures every user only ever sees/modifies their OWN data, never another user's.
+async function requireSupabaseUser(req, res, next) {
+    try {
+        const authHeader = req.headers.authorization || '';
+        const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
+
+        if (!token) {
+            return res.status(401).json({ error: 'Not authenticated. Please sign in again.' });
+        }
+
+        const { data, error } = await supabase.auth.getUser(token);
+        if (error || !data?.user) {
+            return res.status(401).json({ error: 'Session expired or invalid. Please sign in again.' });
+        }
+
+        req.userId = data.user.id;
+        req.userEmail = data.user.email;
+        next();
+    } catch (err) {
+        res.status(401).json({ error: 'Authentication check failed.' });
+    }
+}
+
 // Basic email syntax validator
 function isValidEmail(email) {
     if (!email || typeof email !== 'string') return false;
@@ -137,7 +161,7 @@ app.post('/api/verify-smtp', verifyCsrf, handleVerifyGmail);
 app.post('/api/test-smtp', verifyCsrf, handleVerifyGmail);
 
 // 2. Start Bulk Send Batch Job
-app.post('/api/send-batch', verifyCsrf, async (req, res) => {
+app.post('/api/send-batch', verifyCsrf, requireSupabaseUser, async (req, res) => {
     const {
         smtpConfig,
         senderName,
@@ -210,7 +234,9 @@ app.post('/api/send-batch', verifyCsrf, async (req, res) => {
         clients: new Set(),
         aborted: false,
         startedAt: new Date().toISOString(),
-        completedAt: null
+        completedAt: null,
+        userId: req.userId,
+        userEmail: req.userEmail
     };
 
     activeJobs.set(jobId, job);
@@ -412,7 +438,9 @@ async function recordCampaignHistory(job, config) {
                     failed_count: job.failed || 0,
                     delay_ms: config.delay || 2000,
                     status: job.status || 'completed',
-                    duration_ms: durationMs
+                    duration_ms: durationMs,
+                    user_id: job.userId || null,
+                    user_email: job.userEmail || null
                 }
             ]);
 
@@ -471,12 +499,13 @@ app.post('/api/job-cancel/:jobId', verifyCsrf, (req, res) => {
     res.json({ success: true, message: 'Job cancellation requested.' });
 });
 
-// 5. Get Campaign History (from Supabase)
-app.get('/api/campaign-history', async (req, res) => {
+// 5. Get Campaign History (from Supabase) - only the logged-in user's own campaigns
+app.get('/api/campaign-history', requireSupabaseUser, async (req, res) => {
     try {
         const { data, error } = await supabase
             .from('campaign_history')
             .select('*')
+            .eq('user_id', req.userId)
             .order('created_at', { ascending: false });
 
         if (error) {
@@ -489,17 +518,23 @@ app.get('/api/campaign-history', async (req, res) => {
     }
 });
 
-// 6. Delete Campaign History Row (from Supabase)
-app.delete('/api/campaign-history/:id', verifyCsrf, async (req, res) => {
+// 6. Delete Campaign History Row (from Supabase) - only if it belongs to the logged-in user
+app.delete('/api/campaign-history/:id', verifyCsrf, requireSupabaseUser, async (req, res) => {
     try {
         const { id } = req.params;
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('campaign_history')
             .delete()
-            .eq('id', id);
+            .eq('id', id)
+            .eq('user_id', req.userId)
+            .select();
 
         if (error) {
             return res.status(500).json({ error: error.message });
+        }
+
+        if (!data || data.length === 0) {
+            return res.status(404).json({ error: 'Record not found or you do not have permission to delete it.' });
         }
 
         res.json({ success: true, message: 'Campaign history entry deleted.' });
