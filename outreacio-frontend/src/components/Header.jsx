@@ -82,58 +82,55 @@ export default function Header({
           fontWeight: '500',
           color: 'var(--text-primary)'
         }}>
-          <a
-            href="#benefits"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate('landing', 'benefits');
-            }}
-            style={{ color: 'inherit', textDecoration: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
-          >
-            Features
-          </a>
-          <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
+          {currentView === 'landing' && (
+            <>
+              <button
+                type="button"
+                onClick={() => navigate('landing', 'benefits')}
+                style={{ background: 'none', border: 'none', font: 'inherit', color: 'inherit', cursor: 'pointer', padding: 0, transition: 'color 0.2s' }}
+              >
+                Features
+              </button>
+              <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
 
-          <a
-            href="#how-it-works-sec"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate('landing', 'how-it-works-sec');
-            }}
-            style={{ color: 'inherit', textDecoration: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
-          >
-            Workflows
-          </a>
-          <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
+              <button
+                type="button"
+                onClick={() => navigate('landing', 'how-it-works-sec')}
+                style={{ background: 'none', border: 'none', font: 'inherit', color: 'inherit', cursor: 'pointer', padding: 0, transition: 'color 0.2s' }}
+              >
+                Workflows
+              </button>
+              <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
 
-          <a
-            href="#pricing"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate('landing', 'pricing');
-            }}
-            style={{ color: 'inherit', textDecoration: 'none', cursor: 'pointer', transition: 'color 0.2s' }}
-          >
-            Pricing
-          </a>
-          <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
+              <button
+                type="button"
+                onClick={() => navigate('landing', 'pricing')}
+                style={{ background: 'none', border: 'none', font: 'inherit', color: 'inherit', cursor: 'pointer', padding: 0, transition: 'color 0.2s' }}
+              >
+                Pricing
+              </button>
+              <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
+            </>
+          )}
 
-          <a
-            href="/contact"
-            onClick={(e) => {
-              e.preventDefault();
-              navigate('contact');
-            }}
-            style={{
-              color: currentView === 'contact' ? 'var(--accent)' : 'inherit',
-              fontWeight: currentView === 'contact' ? '700' : '500',
-              textDecoration: 'none',
-              cursor: 'pointer',
-              transition: 'color 0.2s'
-            }}
-          >
-            Contact
-          </a>
+          {currentView !== 'contact' && (
+            <button
+              type="button"
+              onClick={() => navigate('contact')}
+              style={{
+                background: 'none',
+                border: 'none',
+                font: 'inherit',
+                color: 'inherit',
+                fontWeight: '500',
+                cursor: 'pointer',
+                padding: 0,
+                transition: 'color 0.2s'
+              }}
+            >
+              Contact
+            </button>
+          )}
         </nav>
 
         {/* User Authenticated Profile Dropdown (Parley Dark Aesthetic) */}
