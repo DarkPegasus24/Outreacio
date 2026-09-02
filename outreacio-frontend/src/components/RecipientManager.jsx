@@ -1,16 +1,27 @@
 import React, { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
-import { UploadCloud, CheckCircle2, Download, Trash2, Sparkles, Search } from 'lucide-react';
+import { UploadCloud, CheckCircle2, Trash2, Search, AlertCircle } from 'lucide-react';
 
-const EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+const STRICT_EMAIL_REGEX = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+$/;
+const EMBEDDED_EMAIL_REGEX = /[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)+/g;
 
-const isEmailLike = (val) => typeof val === 'string' && EMAIL_REGEX.test(val.trim());
+// Extracts an email address from text (exact match or embedded within longer string)
+function extractEmailFromText(val) {
+  if (val === undefined || val === null) return null;
+  const str = String(val).trim();
+  if (!str) return null;
+  if (STRICT_EMAIL_REGEX.test(str)) return str;
+  const matches = str.match(EMBEDDED_EMAIL_REGEX);
+  if (matches && matches.length > 0) {
+    return matches[0].trim();
+  }
+  return null;
+}
 
-// Auto-detects which column holds emails and which holds company names,
-// no matter how many columns the sheet has or what they're named.
-// Rows that don't contain a valid email (including the header row) are
-// silently skipped — no "valid/invalid" status is ever shown to the user.
-function extractRecipientsFromRows(rows) {
+const isEmailLike = (val) => Boolean(extractEmailFromText(val));
+
+// Auto-detects email and company name columns for a single sheet
+function extractRecipientsFromRows(rows, sheetIndex = 0) {
   if (!Array.isArray(rows) || rows.length === 0) return [];
 
   const colCount = rows.reduce((max, r) => Math.max(max, r.length), 0);
@@ -33,7 +44,7 @@ function extractRecipientsFromRows(rows) {
     }
   });
 
-  if (emailCol === -1) return []; // no column looked like emails at all
+  if (emailCol === -1) return []; // no column had emails in this sheet
 
   // Only keep rows that actually have a valid email in that column.
   const dataRows = rows.filter((row) => isEmailLike(row[emailCol]));
@@ -60,16 +71,21 @@ function extractRecipientsFromRows(rows) {
     }
   });
 
-  return dataRows.map((row, idx) => ({
-    id: `rec_${Date.now()}_${idx}_${Math.random().toString(36).substring(2, 6)}`,
-    companyName: companyCol !== -1 ? String(row[companyCol] ?? '').trim() : '',
-    email: String(row[emailCol]).trim()
-  }));
+  return dataRows.map((row, idx) => {
+    const rawEmail = row[emailCol];
+    const email = extractEmailFromText(rawEmail) || String(rawEmail).trim();
+    return {
+      id: `rec_${Date.now()}_${sheetIndex}_${idx}_${Math.random().toString(36).substring(2, 6)}`,
+      companyName: companyCol !== -1 ? String(row[companyCol] ?? '').trim() : '',
+      email
+    };
+  });
 }
 
 export default function RecipientManager({ recipients, onUpdateRecipients, onBack, onContinue, isStepValid }) {
   const [searchFilter, setSearchFilter] = useState('');
   const [isParsing, setIsParsing] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
   const fileInputRef = useRef(null);
 
   const handleFileUpload = (e) => {
@@ -77,19 +93,47 @@ export default function RecipientManager({ recipients, onUpdateRecipients, onBac
     if (!file) return;
 
     setIsParsing(true);
+    setUploadError(null);
     const reader = new FileReader();
 
     reader.onload = (evt) => {
       try {
         const data = new Uint8Array(evt.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: false });
-        const parsed = extractRecipientsFromRows(rows);
-        onUpdateRecipients(parsed);
+
+        let allExtracted = [];
+
+        // Scan ALL sheets in the workbook
+        workbook.SheetNames.forEach((sheetName, sheetIndex) => {
+          const worksheet = workbook.Sheets[sheetName];
+          if (!worksheet) return;
+          const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: '', raw: false });
+          const sheetRecipients = extractRecipientsFromRows(rows, sheetIndex);
+          if (sheetRecipients.length > 0) {
+            allExtracted = allExtracted.concat(sheetRecipients);
+          }
+        });
+
+        // Dedupe by email address (case-insensitive) across all sheets
+        const seenEmails = new Set();
+        const dedupedRecipients = [];
+        for (const item of allExtracted) {
+          const lowerEmail = item.email.toLowerCase();
+          if (!seenEmails.has(lowerEmail)) {
+            seenEmails.add(lowerEmail);
+            dedupedRecipients.push(item);
+          }
+        }
+
+        if (dedupedRecipients.length === 0) {
+          setUploadError('No email addresses were found in this file. Make sure at least one column or cell contains valid email addresses.');
+          onUpdateRecipients([]);
+        } else {
+          setUploadError(null);
+          onUpdateRecipients(dedupedRecipients);
+        }
       } catch (err) {
-        alert(`Failed to read Excel file: ${err.message}`);
+        setUploadError(`Failed to read Excel file: ${err.message}`);
       } finally {
         setIsParsing(false);
       }
@@ -97,7 +141,7 @@ export default function RecipientManager({ recipients, onUpdateRecipients, onBac
 
     reader.onerror = () => {
       setIsParsing(false);
-      alert('Failed to read the file. Please try again.');
+      setUploadError('Failed to read the file. Please try again.');
     };
 
     reader.readAsArrayBuffer(file);
@@ -105,31 +149,9 @@ export default function RecipientManager({ recipients, onUpdateRecipients, onBac
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
-  const handleLoadSample = () => {
-    const samples = [
-      { id: '1', companyName: 'Acme Corporation', email: 'alex@acmecorp.com' },
-      { id: '2', companyName: 'Starlight Media', email: 'marketing@starlight.io' },
-      { id: '3', companyName: 'Nexus AI Labs', email: 'partnerships@nexusai.tech' },
-      { id: '4', companyName: 'Apex Cloud Solutions', email: 'contact@apexcloud.co' }
-    ];
-    onUpdateRecipients(samples);
-  };
-
-  const handleDownloadTemplate = () => {
-    const wsData = [
-      ['Company Name', 'Email'],
-      ['Acme Corp', 'contact@acmecorp.com'],
-      ['TechNova', 'team@technova.io'],
-      ['Global Logistics', 'info@globallogistics.org']
-    ];
-    const worksheet = XLSX.utils.aoa_to_sheet(wsData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Recipients');
-    XLSX.writeFile(workbook, 'outreacio_recipient_template.xlsx');
-  };
-
   const handleClearAll = () => {
     onUpdateRecipients([]);
+    setUploadError(null);
   };
 
   const handleDeleteRow = (id) => {
@@ -173,28 +195,6 @@ export default function RecipientManager({ recipients, onUpdateRecipients, onBac
             Tell us who should receive this email. Upload an Excel file — any column layout works.
           </p>
         </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            type="button"
-            onClick={handleLoadSample}
-            className="btn btn-secondary btn-sm"
-            title="Load demo companies to test"
-          >
-            <Sparkles size={14} color="var(--accent)" />
-            <span>Load Demo Data</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDownloadTemplate}
-            className="btn btn-secondary btn-sm"
-            title="Download formatted Excel template"
-          >
-            <Download size={14} />
-            <span>Excel Template</span>
-          </button>
-        </div>
       </div>
 
       {/* Upload Box */}
@@ -230,13 +230,33 @@ export default function RecipientManager({ recipients, onUpdateRecipients, onBac
         }}>
           <UploadCloud size={24} color="var(--accent)" />
         </div>
-        <p style={{ fontWeight: '600', fontSize: '15px', marginBottom: '3px' }}>
-          {isParsing ? 'Reading your file…' : 'Click to upload or drag & drop an Excel file'}
+        <p style={{ fontWeight: '600', fontSize: '15px', marginBottom: '4px' }}>
+          {isParsing ? 'Scanning sheets and reading your file…' : 'Click to upload or drag & drop an Excel file'}
         </p>
-        <p style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
-          .xlsx or .xls only — any number of columns, in any order. We'll find the email and
-          company name columns automatically. (Max 10,000 recipients per campaign)
+        <p style={{ fontSize: '13px', color: 'var(--text-secondary)', maxWidth: '580px', margin: '0 auto', lineHeight: 1.5 }}>
+          Any Excel file works — we'll scan every sheet and column, and pull out valid email addresses automatically, even if they're mixed in with other text.
         </p>
+
+        {/* Inline No Emails Found Message */}
+        {uploadError && (
+          <div style={{
+            marginTop: '14px',
+            padding: '12px 16px',
+            borderRadius: '10px',
+            background: 'rgba(226, 75, 74, 0.08)',
+            border: '1px solid rgba(226, 75, 74, 0.25)',
+            color: 'var(--error)',
+            fontSize: '13.5px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            textAlign: 'left',
+            animation: 'fadeIn 0.25s ease'
+          }}>
+            <AlertCircle size={18} style={{ flexShrink: 0 }} />
+            <span>{uploadError}</span>
+          </div>
+        )}
       </div>
 
       {/* Stats Bar */}
@@ -284,8 +304,8 @@ export default function RecipientManager({ recipients, onUpdateRecipients, onBac
           </div>
 
           {/* Table */}
-          <div style={{
-            maxHeight: '260px',
+          <div className="table-responsive-container" style={{
+            maxHeight: '320px',
             overflowY: 'auto',
             borderRadius: 'var(--radius-md)',
             border: '1px solid var(--border)',
@@ -347,7 +367,7 @@ export default function RecipientManager({ recipients, onUpdateRecipients, onBac
       )}
 
       {/* Unified Card Footer */}
-      <div style={{
+      <div className="card-footer-responsive" style={{
         marginTop: '24px',
         paddingTop: '20px',
         borderTop: '1px solid var(--border)',
