@@ -52,42 +52,55 @@ export default function Header({
   }, []);
 
   return (
-    <header style={{
-      position: 'sticky',
-      top: 0,
-      zIndex: 100,
-      background: 'var(--bg-primary)',
-      boxShadow: 'none',
-      WebkitBoxShadow: 'none',
-      border: 'none',
-      outline: 'none',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      padding: '16px 0',
-      marginBottom: '20px',
-      flexWrap: 'wrap',
-      gap: '16px'
-    }}>
-      {/* Left: Brand Logo */}
-      <Logo size="md" onClick={() => navigate('landing')} />
+    <div className="top-capsule-navbar-wrapper">
+      <header className="top-capsule-navbar">
+        {/* Inverted (Concave) Top Corner Curves */}
+        <div className="top-capsule-corner top-capsule-corner-left" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" preserveAspectRatio="none">
+            <path
+              d="M 0 0 A 24 24 0 0 1 24 24 L 26 24 L 26 0 L 0 0 Z"
+              fill="var(--bg-primary, #f7f7f4)"
+            />
+            <path
+              d="M 0 0 A 24 24 0 0 1 23.5 24.5"
+              stroke="#000000"
+              strokeWidth="0.9"
+              fill="none"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        </div>
+
+        <div className="top-capsule-corner top-capsule-corner-right" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" preserveAspectRatio="none">
+            <path
+              d="M 0 24 A 24 24 0 0 1 24 0 L -2 0 L -2 24 L 0 24 Z"
+              fill="var(--bg-primary, #f7f7f4)"
+            />
+            <path
+              d="M 0.5 24.5 A 24 24 0 0 1 24 0"
+              stroke="#000000"
+              strokeWidth="0.9"
+              fill="none"
+              strokeLinecap="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
+        </div>
+
+        {/* Left: Brand Logo */}
+        <Logo size="md" onClick={() => navigate('landing')} />
 
       {/* Right: Nav Links & Auth / CTA Button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-        <nav style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '14px',
-          fontSize: '14.5px',
-          fontWeight: '500',
-          color: 'var(--text-primary)'
-        }}>
+        <nav className="top-capsule-nav-links">
           {currentView === 'landing' && (
             <>
               <button
                 type="button"
+                className="top-capsule-nav-link"
                 onClick={() => navigate('landing', 'benefits')}
-                style={{ background: 'none', border: 'none', font: 'inherit', color: 'inherit', cursor: 'pointer', padding: 0, transition: 'color 0.2s' }}
               >
                 Features
               </button>
@@ -95,8 +108,8 @@ export default function Header({
 
               <button
                 type="button"
+                className="top-capsule-nav-link"
                 onClick={() => navigate('landing', 'how-it-works-sec')}
-                style={{ background: 'none', border: 'none', font: 'inherit', color: 'inherit', cursor: 'pointer', padding: 0, transition: 'color 0.2s' }}
               >
                 Workflows
               </button>
@@ -104,8 +117,8 @@ export default function Header({
 
               <button
                 type="button"
+                className="top-capsule-nav-link"
                 onClick={() => navigate('landing', 'pricing')}
-                style={{ background: 'none', border: 'none', font: 'inherit', color: 'inherit', cursor: 'pointer', padding: 0, transition: 'color 0.2s' }}
               >
                 Pricing
               </button>
@@ -116,17 +129,8 @@ export default function Header({
           {currentView !== 'contact' && (
             <button
               type="button"
+              className="top-capsule-nav-link"
               onClick={() => navigate('contact')}
-              style={{
-                background: 'none',
-                border: 'none',
-                font: 'inherit',
-                color: 'inherit',
-                fontWeight: '500',
-                cursor: 'pointer',
-                padding: 0,
-                transition: 'color 0.2s'
-              }}
             >
               Contact
             </button>
@@ -280,5 +284,6 @@ export default function Header({
         )}
       </div>
     </header>
+    </div>
   );
 }
