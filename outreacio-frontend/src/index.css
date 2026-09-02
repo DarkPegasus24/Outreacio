@@ -4,10 +4,11 @@
    Fonts: DM Sans (500 italic display), Geist / Inter (400, 500 body/UI)
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,500;1,9..40,700&family=Geist:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400..700;1,9..40,500;1,9..40,700&family=Geist:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800;900&display=swap');
 
 :root {
   --font-display: 'DM Sans', Georgia, serif;
+  --font-brand: 'Plus Jakarta Sans', 'Geist', -apple-system, sans-serif;
   --font-body: 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-mono: 'JetBrains Mono', 'Courier New', monospace;
 
@@ -88,8 +89,8 @@ html.lenis, html.lenis body {
 }
 
 html, body {
-  background-color: #f7f7f4;
-  background: #f7f7f4;
+  background-color: var(--bg-primary);
+  background: var(--bg-primary);
   color: var(--text-primary);
   font-family: var(--font-body);
   font-size: 15px;
@@ -108,6 +109,35 @@ h1, h2, h3, h4 {
   font-family: var(--font-display);
   font-style: italic;
   font-weight: 500;
+}
+
+/* Parley-Inspired Stencil-Grotesque Brand Wordmark */
+.brand-wordmark {
+  font-family: var(--font-brand, 'Plus Jakarta Sans', sans-serif);
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  color: var(--text-primary);
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  user-select: none;
+  line-height: 1;
+}
+
+.brand-wordmark-cut-e {
+  position: relative;
+  display: inline-block;
+}
+
+.brand-wordmark-cut-e::after {
+  content: '';
+  position: absolute;
+  top: 48%;
+  left: -1px;
+  right: -1px;
+  height: 2.5px;
+  background-color: var(--bg-primary, #f7f7f4);
+  pointer-events: none;
 }
 
 /* App Layout Container */
@@ -905,6 +935,167 @@ h1, h2, h3, h4 {
   }
   .stepper-mobile {
     display: none !important;
+  }
+}
+
+/* Header & Navbar Rules */
+header, .outreacio-app header {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+  background-color: var(--bg-primary) !important;
+}
+
+/* ==========================================================================
+   MOBILE RESPONSIVENESS OVERHAUL (max-width: 640px)
+   ========================================================================== */
+@media (max-width: 640px) {
+  /* Layout Containers */
+  .app-container {
+    padding: 0 12px 40px !important;
+  }
+  
+  main {
+    padding: 16px 0 40px !important;
+  }
+
+  /* Parley Cards */
+  .parley-card {
+    padding: 18px 14px !important;
+    border-radius: 16px !important;
+    margin-bottom: 16px !important;
+  }
+
+  /* Top Dashboard Tabs (New Campaign vs History) */
+  .dashboard-top-tabs {
+    width: 100% !important;
+    margin-bottom: 20px !important;
+  }
+  .dashboard-top-tabs > div {
+    width: 100% !important;
+    display: flex !important;
+  }
+  .dashboard-top-tabs button {
+    flex: 1 !important;
+    justify-content: center !important;
+    padding: 10px 12px !important;
+    font-size: 13.5px !important;
+  }
+
+  /* Header on Mobile */
+  header {
+    padding: 12px 0 !important;
+    margin-bottom: 12px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+  header nav {
+    gap: 8px !important;
+    font-size: 13px !important;
+    flex-wrap: wrap !important;
+  }
+
+  /* Card Footers on Mobile: Stack Vertically & Go Full Width */
+  .card-footer-responsive {
+    flex-direction: column-reverse !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .card-footer-responsive > * {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+  .card-footer-responsive .btn {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 11px 16px !important;
+    min-height: 44px !important;
+    font-size: 14px !important;
+  }
+  .card-footer-responsive > div {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 10px !important;
+    text-align: center !important;
+  }
+
+  /* Form Grids on Mobile: Stack to Single Column */
+  .form-grid-responsive {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  /* Table Containers & Compact Row Spacing on Mobile */
+  .table-responsive-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 8px !important;
+  }
+  .table-responsive-container table {
+    font-size: 12.5px !important;
+    min-width: 520px !important;
+  }
+  .table-responsive-container th,
+  .table-responsive-container td {
+    padding: 8px 10px !important;
+  }
+
+  /* EmailComposer Mobile Adjustments */
+  .composer-split-view {
+    grid-template-columns: 1fr !important;
+    gap: 14px !important;
+  }
+  .composer-toolbar {
+    gap: 4px !important;
+    padding: 6px 8px !important;
+    overflow-x: auto !important;
+  }
+  .composer-view-tabs {
+    width: 100% !important;
+    overflow-x: auto !important;
+    justify-content: flex-start !important;
+  }
+  .composer-view-tabs button {
+    flex: 1 !important;
+    white-space: nowrap !important;
+    font-size: 12px !important;
+    padding: 6px 8px !important;
+  }
+
+  /* CampaignMonitor Review Summary Grid on Mobile */
+  .review-summary-grid {
+    grid-template-columns: 1fr 1fr !important;
+    gap: 10px !important;
+    padding: 12px 14px !important;
+  }
+
+  /* Throttle presets on Mobile */
+  .throttle-presets-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+  .throttle-presets-row button {
+    width: 100% !important;
+    justify-content: center !important;
+    padding: 9px 12px !important;
+    min-height: 40px !important;
+  }
+
+  /* Mobile Tap Targets (>= 40px) */
+  .btn-icon, .btn-sm {
+    min-width: 38px !important;
+    min-height: 38px !important;
+  }
+}
+
+@media (max-width: 420px) {
+  .review-summary-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 

@@ -40,7 +40,22 @@ A bulk email automation application for sending personalized emails through a Gm
 npm run install-all
 ```
 
-### 2. Run Locally
+### 2. Environment Variables
+
+Create `.env` in `outreacio-backend/`:
+```env
+SUPABASE_URL=https://your-supabase-project.supabase.co
+SUPABASE_ANON_KEY=your-supabase-anon-key
+GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+JWT_SECRET=your-secure-jwt-session-secret
+```
+
+Create `.env` in `outreacio-frontend/`:
+```env
+VITE_GOOGLE_CLIENT_ID=your-google-client-id.apps.googleusercontent.com
+```
+
+### 3. Run Locally
 
 ```bash
 npm run dev
@@ -58,10 +73,12 @@ outreacio/
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── Header.jsx
+│   │   │   ├── LoginPage.jsx (Google Identity Services)
 │   │   │   ├── SmtpConfigCard.jsx (Gmail Setup)
 │   │   │   ├── RecipientManager.jsx
 │   │   │   ├── EmailComposer.jsx
 │   │   │   ├── CampaignMonitor.jsx
+│   │   │   ├── CampaignHistory.jsx
 │   │   │   ├── FaqSection.jsx
 │   │   │   ├── CtaBannerSection.jsx
 │   │   │   ├── ContactPage.jsx
@@ -72,6 +89,7 @@ outreacio/
 │
 ├── outreacio-backend/      # Node.js + Express API
 │   ├── server.js
+│   ├── supabaseClient.js
 │   └── package.json
 │
 ├── package.json            # Root Scripts

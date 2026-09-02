@@ -1,14 +1,17 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import confetti from 'canvas-confetti';
 import { 
   Send, Clock, AlertTriangle, CheckCircle2, XCircle, StopCircle, 
-  Download, Search, RefreshCw, ShieldAlert, Sparkles, Check, FileText
+  Download, Search, RefreshCw, ShieldAlert, Sparkles, Check, FileText,
+  Mail, Timer, Zap, Info
 } from 'lucide-react';
 
 export default function CampaignMonitor({
   smtpConfig,
   subject,
   bodyHtml,
+  attachments = [],
   recipients,
   throttleDelay,
   onThrottleChange,
@@ -21,7 +24,7 @@ export default function CampaignMonitor({
   const [logFilter, setLogFilter] = useState('all');
   const [logSearch, setLogSearch] = useState('');
 
-  const validRecipients = recipients.filter(r => r.isValid);
+  const validRecipients = recipients;
   const isSending = jobState.status === 'running';
   const isCompleted = jobState.status === 'completed';
   const isCancelled = jobState.status === 'cancelled';
@@ -93,7 +96,7 @@ export default function CampaignMonitor({
   };
 
   const filteredLogs = (jobState.logs || []).filter(log => {
-    if (logFilter === 'sent') return log.status === 'sent';
+    if (logFilter === 'success') return log.status === 'success';
     if (logFilter === 'failed') return log.status === 'failed';
     return true;
   });
@@ -139,34 +142,63 @@ export default function CampaignMonitor({
       </div>
 
       {/* Review Summary Box */}
-      <div style={{
+      <div className="review-summary-grid" style={{
         background: '#f8f7f3',
         border: '1px solid var(--border)',
         borderRadius: '12px',
         padding: '16px 20px',
         marginBottom: '20px',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
         gap: '14px',
         fontSize: '13.5px'
       }}>
         <div>
           <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '12px', marginBottom: '2px' }}>Sending from</span>
-          <strong style={{ color: 'var(--text-primary)' }}>{smtpConfig.user || 'Not connected'}</strong>
+          <strong
+            style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}
+            title={smtpConfig.user || 'Not connected'}
+          >
+            {smtpConfig.user || 'Not connected'}
+          </strong>
         </div>
         <div>
           <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '12px', marginBottom: '2px' }}>To</span>
-          <strong style={{ color: 'var(--text-primary)' }}>{validRecipients.length} valid recipient{validRecipients.length === 1 ? '' : 's'}</strong>
+          <strong
+            style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}
+            title={`${validRecipients.length} valid recipient${validRecipients.length === 1 ? '' : 's'}`}
+          >
+            {validRecipients.length} valid recipient{validRecipients.length === 1 ? '' : 's'}
+          </strong>
         </div>
         <div>
           <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '12px', marginBottom: '2px' }}>Subject</span>
-          <strong style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }} title={subject}>
+          <strong
+            style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}
+            title={subject || '(No subject)'}
+          >
             {subject || '(No subject)'}
           </strong>
         </div>
         <div>
           <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '12px', marginBottom: '2px' }}>Delay pacing</span>
-          <strong style={{ color: 'var(--text-primary)' }}>{(throttleDelay / 1000).toFixed(1)}s per email</strong>
+          <strong
+            style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}
+            title={`${(throttleDelay / 1000).toFixed(1)}s per email`}
+          >
+            {(throttleDelay / 1000).toFixed(1)}s per email
+          </strong>
+        </div>
+        <div>
+          <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '12px', marginBottom: '2px' }}>Attachments</span>
+          <strong
+            style={{ color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}
+            title={attachments.length > 0 ? `${attachments.length} file(s) (${(attachments.reduce((acc, f) => acc + (f.size || 0), 0) / (1024 * 1024)).toFixed(2)} MB)` : 'None'}
+          >
+            {attachments.length > 0
+              ? `${attachments.length} file${attachments.length === 1 ? '' : 's'} (${(attachments.reduce((acc, f) => acc + (f.size || 0), 0) / (1024 * 1024)).toFixed(1)} MB)`
+              : 'None'}
+          </strong>
         </div>
       </div>
 
@@ -188,39 +220,45 @@ export default function CampaignMonitor({
         }}>
           <div>
             <label className="form-label" style={{ marginBottom: 2, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Clock size={14} color="var(--accent)" /> Anti-Spam Rate Limiter:
+              <Clock size={14} color="var(--accent)" /> Sending Speed:
               <strong style={{ color: 'var(--text-primary)', fontSize: '15px' }}> {(throttleDelay / 1000).toFixed(1)}s per email</strong>
             </label>
-            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>💡 <em>Slower pacing = higher deliverability &amp; zero spam flags</em></div>
+            <div style={{ fontSize: '12.5px', color: 'var(--text-primary)', marginTop: '2px', fontWeight: '500' }}>
+              This means Outreacio waits {(throttleDelay / 1000).toFixed(1)} seconds between each email it sends.
+            </div>
+            <div style={{ fontSize: '12px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
+              <Info size={12} color="var(--accent)" style={{ flexShrink: 0 }} />
+              <span>Sending slower makes Gmail less likely to block or flag your account.</span>
+            </div>
           </div>
 
-          <div style={{ display: 'flex', gap: '6px' }}>
+          <div className="throttle-presets-row" style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
             <button
               type="button"
               disabled={isSending}
               onClick={() => onThrottleChange(500)}
               className="btn btn-secondary btn-sm"
-              style={{ fontSize: '12px', padding: '4px 10px' }}
+              style={{ fontSize: '12px', padding: '5px 12px', borderColor: throttleDelay === 500 ? 'var(--accent)' : undefined }}
             >
-              Fast (0.5s)
+              Fast — higher risk
             </button>
             <button
               type="button"
               disabled={isSending}
               onClick={() => onThrottleChange(2000)}
               className="btn btn-secondary btn-sm"
-              style={{ fontSize: '12px', padding: '4px 10px', borderColor: throttleDelay === 2000 ? 'var(--accent)' : undefined }}
+              style={{ fontSize: '12px', padding: '5px 12px', borderColor: throttleDelay === 2000 ? 'var(--accent)' : undefined }}
             >
-              Standard (2.0s)
+              Recommended
             </button>
             <button
               type="button"
               disabled={isSending}
               onClick={() => onThrottleChange(5000)}
               className="btn btn-secondary btn-sm"
-              style={{ fontSize: '12px', padding: '4px 10px' }}
+              style={{ fontSize: '12px', padding: '5px 12px', borderColor: throttleDelay === 5000 ? 'var(--accent)' : undefined }}
             >
-              Safe Warmup (5.0s)
+              Safest — slowest
             </button>
           </div>
         </div>
@@ -236,9 +274,9 @@ export default function CampaignMonitor({
           style={{ width: '100%', accentColor: 'var(--accent)', cursor: isSending ? 'not-allowed' : 'pointer' }}
         />
         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px' }}>
-          <span>200ms (Rapid)</span>
-          <span>2.0s (Recommended Default)</span>
-          <span>15.0s (Strict Rate Limit)</span>
+          <span>Fastest</span>
+          <span>Balanced</span>
+          <span>Slowest</span>
         </div>
 
         {/* Campaign Summary Pill Box */}
@@ -247,14 +285,23 @@ export default function CampaignMonitor({
           paddingTop: '12px',
           borderTop: '1px solid var(--border)',
           display: 'flex',
-          gap: '18px',
+          gap: '20px',
           fontSize: '13px',
           color: 'var(--text-secondary)',
           flexWrap: 'wrap'
         }}>
-          <div>📊 Total Emails: <strong>{validRecipients.length}</strong></div>
-          <div>⏱️ Estimated Time: <strong>~{formatEstimatedTime(Math.round((validRecipients.length * throttleDelay) / 1000))}</strong></div>
-          <div>⚡ Batch Pacing: <strong>1 email every {(throttleDelay / 1000).toFixed(1)}s</strong></div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Mail size={14} color="var(--accent)" style={{ flexShrink: 0 }} />
+            <span>Total Emails: <strong style={{ color: 'var(--text-primary)' }}>{validRecipients.length}</strong></span>
+          </div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Timer size={14} color="var(--accent)" style={{ flexShrink: 0 }} />
+            <span>This will take about: <strong style={{ color: 'var(--text-primary)' }}>{formatEstimatedTime(Math.round((validRecipients.length * throttleDelay) / 1000))}</strong></span>
+          </div>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+            <Zap size={14} color="var(--accent)" style={{ flexShrink: 0 }} />
+            <span>Speed: <strong style={{ color: 'var(--text-primary)' }}>1 email every {(throttleDelay / 1000).toFixed(1)} seconds</strong></span>
+          </div>
         </div>
       </div>
 
@@ -482,28 +529,28 @@ export default function CampaignMonitor({
               </div>
             </div>
 
-            <div style={{
-              maxHeight: '280px',
+            <div className="table-responsive-container" style={{
+              maxHeight: '440px',
               overflowY: 'auto',
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--border)',
               background: 'var(--bg-surface)'
             }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14.5px' }}>
                 <thead>
                   <tr style={{ background: 'var(--bg-surface-hover)', borderBottom: '1px solid var(--border)', textAlign: 'left' }}>
-                    <th style={{ padding: '8px 12px', width: '45px', color: 'var(--text-secondary)' }}>#</th>
-                    <th style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>Company</th>
-                    <th style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>Recipient Email</th>
-                    <th style={{ padding: '8px 12px', width: '90px', color: 'var(--text-secondary)' }}>Status</th>
-                    <th style={{ padding: '8px 12px', color: 'var(--text-secondary)' }}>Details</th>
-                    <th style={{ padding: '8px 12px', width: '80px', color: 'var(--text-secondary)' }}>Time</th>
+                    <th style={{ padding: '11px 14px', width: '45px', color: 'var(--text-secondary)' }}>#</th>
+                    <th style={{ padding: '11px 14px', color: 'var(--text-secondary)' }}>Company</th>
+                    <th style={{ padding: '11px 14px', color: 'var(--text-secondary)' }}>Recipient Email</th>
+                    <th style={{ padding: '11px 14px', width: '100px', color: 'var(--text-secondary)' }}>Status</th>
+                    <th style={{ padding: '11px 14px', color: 'var(--text-secondary)' }}>Details</th>
+                    <th style={{ padding: '11px 14px', width: '90px', color: 'var(--text-secondary)' }}>Time</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredLogs.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                      <td colSpan={6} style={{ textAlign: 'center', padding: '32px 24px', color: 'var(--text-muted)' }}>
                         {isSending ? 'Sending in progress... First recipient log will appear shortly.' : 'No logs recorded yet.'}
                       </td>
                     </tr>
@@ -516,20 +563,20 @@ export default function CampaignMonitor({
                           background: item.status === 'failed' ? 'var(--error-bg)' : 'var(--bg-white)'
                         }}
                       >
-                        <td style={{ padding: '7px 12px', color: 'var(--text-muted)' }}>{item.index}</td>
-                        <td style={{ padding: '7px 12px', fontWeight: '500' }}>{item.companyName}</td>
-                        <td style={{ padding: '7px 12px', fontFamily: 'var(--font-mono)', fontSize: '12px' }}>{item.email}</td>
-                        <td style={{ padding: '7px 12px' }}>
+                        <td style={{ padding: '12px 14px', color: 'var(--text-muted)' }}>{item.index}</td>
+                        <td style={{ padding: '12px 14px', fontWeight: '500' }}>{item.companyName}</td>
+                        <td style={{ padding: '12px 14px', fontFamily: 'var(--font-mono)', fontSize: '13.5px' }}>{item.email}</td>
+                        <td style={{ padding: '12px 14px' }}>
                           {item.status === 'success' ? (
-                            <span className="badge badge-success" style={{ fontSize: '11px' }}>✓ Sent</span>
+                            <span className="badge badge-success" style={{ fontSize: '12px', padding: '3px 8px' }}>✓ Sent</span>
                           ) : (
-                            <span className="badge badge-danger" style={{ fontSize: '11px' }}>✗ Failed</span>
+                            <span className="badge badge-danger" style={{ fontSize: '12px', padding: '3px 8px' }}>✗ Failed</span>
                           )}
                         </td>
-                        <td style={{ padding: '7px 12px', color: item.status === 'failed' ? 'var(--error)' : 'var(--text-secondary)', fontSize: '12.5px' }}>
+                        <td style={{ padding: '12px 14px', color: item.status === 'failed' ? 'var(--error)' : 'var(--text-secondary)', fontSize: '14px' }} title={item.details}>
                           {item.details}
                         </td>
-                        <td style={{ padding: '7px 12px', color: 'var(--text-muted)', fontSize: '12px' }}>{item.timestamp}</td>
+                        <td style={{ padding: '12px 14px', color: 'var(--text-muted)', fontSize: '13px' }}>{item.timestamp}</td>
                       </tr>
                     ))
                   )}
@@ -540,8 +587,8 @@ export default function CampaignMonitor({
         </div>
       )}
 
-      {/* Confirmation Modal */}
-      {showConfirmModal && (
+      {/* Confirmation Modal (Mounted to document.body via Portal to escape transformed ancestors) */}
+      {showConfirmModal && createPortal(
         <div style={{
           position: 'fixed',
           inset: 0,
@@ -550,7 +597,7 @@ export default function CampaignMonitor({
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          zIndex: 1000,
+          zIndex: 9999,
           padding: '20px'
         }}>
           <div style={{
@@ -585,7 +632,7 @@ export default function CampaignMonitor({
               gap: '8px'
             }}>
               <ShieldAlert size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-              <span>Ensure recipients are opt-in and compliant with anti-spam laws (CAN-SPAM / GDPR).</span>
+              <span>Only email people who agreed to be contacted. Sending unwanted bulk emails can get your Gmail account suspended and may break the law in some countries.</span>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
@@ -608,7 +655,8 @@ export default function CampaignMonitor({
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );

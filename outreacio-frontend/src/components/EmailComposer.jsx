@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Bold, Italic, Underline, List, ListOrdered, Link2, 
-  Heading1, Heading2, Quote, Eye, Edit3, Code2, Tag, Smartphone, Monitor, ArrowRight
+  Heading1, Heading2, Quote, Eye, Edit3, Code2, Tag, Smartphone, Monitor, ArrowRight,
+  Paperclip, FileText, X, AlertCircle
 } from 'lucide-react';
 
 export default function EmailComposer({ 
@@ -9,6 +10,8 @@ export default function EmailComposer({
   onSubjectChange, 
   bodyHtml, 
   onBodyHtmlChange, 
+  attachments = [],
+  onAttachmentsChange,
   recipients,
   onBack,
   onContinue,
@@ -18,6 +21,7 @@ export default function EmailComposer({
   const [previewIndex, setPreviewIndex] = useState(0);
   const [previewDevice, setPreviewDevice] = useState('desktop');
   const editorRef = useRef(null);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     if (editorRef.current && (activeView === 'editor' || activeView === 'split')) {
@@ -118,7 +122,7 @@ export default function EmailComposer({
         </div>
 
         {/* View Switchers */}
-        <div style={{ display: 'flex', gap: '4px', background: '#f8f7f3', padding: '4px', borderRadius: '10px', border: '1px solid var(--border)' }}>
+        <div className="composer-view-tabs" style={{ display: 'flex', gap: '4px', background: '#f8f7f3', padding: '4px', borderRadius: '10px', border: '1px solid var(--border)' }}>
           <button
             type="button"
             onClick={() => setActiveView('split')}
@@ -204,7 +208,7 @@ export default function EmailComposer({
       </div>
 
       {/* Editor & Preview Split Area */}
-      <div style={{
+      <div className="composer-split-view" style={{
         display: 'grid',
         gridTemplateColumns: activeView === 'split' ? '1fr 1fr' : '1fr',
         gap: '20px',
@@ -215,7 +219,7 @@ export default function EmailComposer({
         {(activeView === 'split' || activeView === 'editor' || activeView === 'html') && (
           <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', background: 'var(--bg-surface)' }}>
             {/* Formatting Toolbar */}
-            <div style={{
+            <div className="composer-toolbar" style={{
               background: '#f8f7f3',
               borderBottom: '1px solid var(--border)',
               padding: '8px 10px',
@@ -367,8 +371,152 @@ export default function EmailComposer({
         )}
       </div>
 
-      {/* Unified Card Footer */}
+      {/* File Attachments Section */}
       <div style={{
+        marginTop: '20px',
+        padding: '16px 20px',
+        background: '#f8f7f3',
+        borderRadius: '12px',
+        border: '1px solid var(--border)'
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: attachments.length > 0 ? '12px' : '0',
+          flexWrap: 'wrap',
+          gap: '10px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Paperclip size={16} color="var(--accent)" />
+            <strong style={{ fontSize: '13.5px', color: 'var(--text-primary)' }}>
+              Attachments
+            </strong>
+            {attachments.length > 0 && (
+              <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                ({attachments.length} file{attachments.length === 1 ? '' : 's'} &bull; {(attachments.reduce((acc, f) => acc + (f.size || 0), 0) / (1024 * 1024)).toFixed(2)} MB / 20 MB)
+              </span>
+            )}
+          </div>
+
+          <div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={(e) => {
+                const files = Array.from(e.target.files || []);
+                if (files.length === 0) return;
+                const currentTotal = attachments.reduce((acc, f) => acc + (f.size || 0), 0);
+                const newTotal = currentTotal + files.reduce((acc, f) => acc + f.size, 0);
+                if (newTotal > 20 * 1024 * 1024) {
+                  alert(`Adding these files would exceed the 20MB limit (${(newTotal / (1024 * 1024)).toFixed(1)} MB). Please remove some files.`);
+                  return;
+                }
+                onAttachmentsChange?.([...attachments, ...files]);
+                if (fileInputRef.current) fileInputRef.current.value = '';
+              }}
+              multiple
+              accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg,.zip,.csv,.txt"
+              style={{ display: 'none' }}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={attachments.reduce((acc, f) => acc + (f.size || 0), 0) > 20 * 1024 * 1024}
+              className="btn btn-secondary btn-sm"
+              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '12.5px', padding: '5px 12px' }}
+            >
+              <Paperclip size={13} />
+              <span>Attach Files</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Exceeding Size Warning */}
+        {attachments.reduce((acc, f) => acc + (f.size || 0), 0) > 20 * 1024 * 1024 && (
+          <div style={{
+            marginTop: '10px',
+            padding: '8px 12px',
+            borderRadius: '6px',
+            background: 'var(--error-bg)',
+            border: '1px solid var(--error-border)',
+            color: 'var(--error)',
+            fontSize: '12.5px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px'
+          }}>
+            <AlertCircle size={14} />
+            <span>Combined attachment size exceeds the 20MB limit. Please remove some files.</span>
+          </div>
+        )}
+
+        {/* Attached Files List */}
+        {attachments.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+            {attachments.map((file, index) => {
+              const formattedSize = file.size < 1024 * 1024
+                ? `${(file.size / 1024).toFixed(1)} KB`
+                : `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+
+              return (
+                <div
+                  key={`${file.name}_${index}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: 'var(--bg-white)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '8px',
+                    padding: '6px 10px',
+                    fontSize: '12.5px',
+                    color: 'var(--text-primary)',
+                    maxWidth: '280px'
+                  }}
+                >
+                  <FileText size={14} color="var(--accent)" style={{ flexShrink: 0 }} />
+                  <span
+                    style={{
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      fontWeight: '500'
+                    }}
+                    title={file.name}
+                  >
+                    {file.name}
+                  </span>
+                  <span style={{ fontSize: '11px', color: 'var(--text-muted)', flexShrink: 0 }}>
+                    ({formattedSize})
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => onAttachmentsChange?.(attachments.filter((_, idx) => idx !== index))}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      padding: '2px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      borderRadius: '4px',
+                      marginLeft: '2px'
+                    }}
+                    title="Remove attachment"
+                  >
+                    <X size={13} />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+
+      {/* Unified Card Footer */}
+      <div className="card-footer-responsive" style={{
         paddingTop: '20px',
         borderTop: '1px solid var(--border)',
         display: 'flex',

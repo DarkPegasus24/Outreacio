@@ -119,30 +119,6 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
         <div className="parley-hero-overlay" />
 
         <div style={{ position: 'relative', zIndex: 2, maxWidth: '820px', margin: '0 auto' }}>
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'rgba(255, 255, 255, 0.95)',
-            border: '1px solid rgba(0, 0, 0, 0.08)',
-            padding: '5px 14px',
-            borderRadius: '9999px',
-            fontSize: '12.5px',
-            fontWeight: '600',
-            color: '#251f19',
-            marginBottom: '20px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
-          }}>
-            <span style={{
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              background: '#1fbe6d',
-              boxShadow: '0 0 8px #1fbe6d'
-            }} />
-            <span>Built Exclusively for Gmail &amp; Google Workspace</span>
-          </div>
-
           <h1 style={{
             fontFamily: 'var(--font-display)',
             fontSize: 'clamp(2.5rem, 5.8vw, 4.2rem)',
@@ -173,7 +149,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
               <div className="parley-chat-icon">
                 &gt;
               </div>
-              <span>Get started free</span>
+              <span>Get started now</span>
             </button>
           </div>
         </div>
@@ -655,7 +631,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
             </ul>
 
             <button onClick={onLaunchApp} className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '15px' }}>
-              Start Sending Free
+              Get Started Now
             </button>
           </div>
         </div>

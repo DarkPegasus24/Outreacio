@@ -19,7 +19,11 @@ To set up a local development environment:
    npm run install-all
    ```
 
-3. Start both the backend and frontend dev servers concurrently:
+3. Configure environment variables:
+   - Copy `.env.example` to `.env` in both `outreacio-backend/` and `outreacio-frontend/`.
+   - Provide your Supabase project keys and Google OAuth Client ID.
+
+4. Start both the backend and frontend dev servers concurrently:
    ```bash
    npm run dev
    ```
