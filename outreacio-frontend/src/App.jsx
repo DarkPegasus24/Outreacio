@@ -9,9 +9,51 @@ import SmtpConfigCard from './components/SmtpConfigCard';
 import RecipientManager from './components/RecipientManager';
 import EmailComposer from './components/EmailComposer';
 import CampaignMonitor from './components/CampaignMonitor';
+import CampaignHistory from './components/CampaignHistory';
+import LoginPage from './components/LoginPage';
+import { supabase } from './supabaseClient';
 import './App.css';
 
 export default function App() {
+  const [dashboardTab, setDashboardTab] = useState('campaign'); // 'campaign' | 'history'
+  const [user, setUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  // Check authenticated Google session via Supabase on app load
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        const u = session.user;
+        setUser({
+          id: u.id,
+          email: u.email,
+          name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0],
+          picture: u.user_metadata?.avatar_url || u.user_metadata?.picture || ''
+        });
+      } else {
+        setUser(null);
+      }
+      setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        const u = session.user;
+        setUser({
+          id: u.id,
+          email: u.email,
+          name: u.user_metadata?.full_name || u.user_metadata?.name || u.email?.split('@')[0],
+          picture: u.user_metadata?.avatar_url || u.user_metadata?.picture || ''
+        });
+      } else {
+        setUser(null);
+      }
+      setAuthLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
   // Initialize Lenis Smooth Scrolling
   useEffect(() => {
     const lenis = new Lenis({
@@ -40,6 +82,9 @@ export default function App() {
   const getInitialView = () => {
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
+    if (path.includes('login') || hash.includes('login')) {
+      return 'login';
+    }
     if (path.includes('dashboard') || hash.includes('dashboard')) {
       return 'dashboard';
     }
@@ -65,6 +110,11 @@ export default function App() {
       if (!window.location.pathname.includes('/contact')) {
         window.history.pushState({ view: 'contact' }, '', '/contact');
       }
+    } else if (currentView === 'login') {
+      document.title = 'Outreacio | Sign In with Google';
+      if (!window.location.pathname.includes('/login')) {
+        window.history.pushState({ view: 'login' }, '', '/login');
+      }
     } else {
       document.title = 'Outreacio | Campaign Dashboard';
       if (!window.location.pathname.includes('/dashboard')) {
@@ -77,7 +127,9 @@ export default function App() {
   useEffect(() => {
     const handlePopState = () => {
       const path = window.location.pathname.toLowerCase();
-      if (path.includes('dashboard')) {
+      if (path.includes('login')) {
+        setCurrentView('login');
+      } else if (path.includes('dashboard')) {
         setCurrentView('dashboard');
       } else if (path.includes('contact')) {
         setCurrentView('contact');
@@ -95,6 +147,33 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleLaunchApp = () => {
+    if (user) {
+      navigateToView('dashboard');
+    } else {
+      navigateToView('login');
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+    } catch (e) {}
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch (e) {}
+    try {
+      localStorage.removeItem('outreacio_auth_token');
+    } catch (e) {}
+    setUser(null);
+    navigateToView('landing');
+  };
+
+  const handleLoginSuccess = (loggedInUser) => {
+    setUser(loggedInUser);
+    navigateToView('dashboard');
+  };
+
   // Session Security & CSRF Token
   const [csrfToken, setCsrfToken] = useState('');
   const [isHelpOpen, setIsHelpOpen] = useState(false);
@@ -109,11 +188,12 @@ export default function App() {
   // 2. Recipients State
   const [recipients, setRecipients] = useState([]);
 
-  // 3. Email Content State
+  // 3. Email Content & Attachments State
   const [subject, setSubject] = useState('Exclusive Update for {{Company Name}}');
   const [bodyHtml, setBodyHtml] = useState(
     '<p>Hi <strong>{{Company Name}}</strong> Team,</p><p>We wanted to reach out regarding your current workflow and share how our automated tools can save you hours each week.</p><p>Would you have 10 minutes for a quick intro this week?</p><p>Best regards,<br><strong>Alex from Outreacio</strong></p>'
   );
+  const [attachments, setAttachments] = useState([]);
 
   // 4. Rate Limiting State (default 2.0s = 2000ms)
   const [throttleDelay, setThrottleDelay] = useState(2000);
@@ -204,6 +284,24 @@ export default function App() {
     }
 
     try {
+      // Convert File objects to base64 before sending to backend
+      const fileToBase64 = (file) => new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => {
+          const result = reader.result;
+          const base64 = typeof result === 'string' ? result.split(',')[1] || '' : '';
+          resolve({
+            filename: file.name,
+            contentType: file.type || 'application/octet-stream',
+            content: base64
+          });
+        };
+        reader.onerror = (err) => reject(err);
+        reader.readAsDataURL(file);
+      });
+
+      const base64Attachments = await Promise.all(attachments.map(fileToBase64));
+
       const response = await fetch('/api/send-batch', {
         method: 'POST',
         headers: {
@@ -220,7 +318,8 @@ export default function App() {
           subject,
           bodyHtml,
           recipients: validRecipients,
-          throttleDelayMs: throttleDelay
+          throttleDelayMs: throttleDelay,
+          attachments: base64Attachments
         })
       });
 
@@ -345,6 +444,7 @@ export default function App() {
         pass: ''
       });
       setRecipients([]);
+      setAttachments([]);
       setJobState({
         jobId: null,
         status: 'idle',
@@ -365,6 +465,9 @@ export default function App() {
         onToggleView={() => navigateToView(currentView === 'dashboard' ? 'landing' : 'dashboard')}
         onOpenHelp={() => setIsHelpOpen(true)}
         onResetAll={handleResetAll}
+        user={user}
+        onLogout={handleLogout}
+        onRequireAuth={() => navigateToView('login')}
       />
 
       <DeliverabilityModal 
@@ -372,99 +475,192 @@ export default function App() {
         onClose={() => setIsHelpOpen(false)}
       />
 
+      {currentView === 'login' && (
+        <LoginPage 
+          onLoginSuccess={handleLoginSuccess}
+          onNavigateHome={() => navigateToView('landing')}
+        />
+      )}
+
       {currentView === 'landing' && (
         <LandingPage 
-          onLaunchApp={() => navigateToView('dashboard')} 
+          onLaunchApp={handleLaunchApp} 
           onNavigateContact={() => navigateToView('contact')}
         />
       )}
 
       {currentView === 'contact' && (
         <ContactPage 
-          onLaunchApp={() => navigateToView('dashboard')} 
+          onLaunchApp={handleLaunchApp} 
         />
       )}
 
       {currentView === 'dashboard' && (
+        !authLoading && !user ? (
+          <LoginPage 
+            onLoginSuccess={handleLoginSuccess}
+            onNavigateHome={() => navigateToView('landing')}
+          />
+        ) : (
         <main style={{
-          maxWidth: '880px',
+          maxWidth: '960px',
           margin: '0 auto',
           width: '100%',
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'center',
-          padding: '40px 16px 60px'
+          padding: '32px 16px 60px'
         }}>
-          {/* Guided Step Stepper */}
-          <WizardStepper 
-            currentStep={wizardStep}
-            onStepClick={handleStepClick}
-            isStepCompleted={isStepCompleted}
-            isSending={isSending}
-          />
+          {/* Top-Level Dashboard Navigation Tabs (New Campaign vs History) */}
+          <div className="dashboard-top-tabs" style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            marginBottom: '28px'
+          }}>
+            <div style={{
+              display: 'inline-flex',
+              background: 'var(--bg-surface)',
+              padding: '4px',
+              borderRadius: '12px',
+              border: '1px solid var(--border)',
+              gap: '4px'
+            }}>
+              <button
+                type="button"
+                onClick={() => setDashboardTab('campaign')}
+                style={{
+                  padding: '8px 22px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: dashboardTab === 'campaign' ? 'var(--bg-white)' : 'transparent',
+                  color: dashboardTab === 'campaign' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  fontWeight: dashboardTab === 'campaign' ? '700' : '500',
+                  fontSize: '14px',
+                  boxShadow: dashboardTab === 'campaign' ? '0 2px 8px rgba(37, 31, 25, 0.08)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span>New Campaign</span>
+              </button>
 
-          {/* Step 1: Connect Gmail */}
-          {wizardStep === 1 && (
+              <button
+                type="button"
+                onClick={() => setDashboardTab('history')}
+                style={{
+                  padding: '8px 22px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: dashboardTab === 'history' ? 'var(--bg-white)' : 'transparent',
+                  color: dashboardTab === 'history' ? 'var(--text-primary)' : 'var(--text-secondary)',
+                  fontWeight: dashboardTab === 'history' ? '700' : '500',
+                  fontSize: '14px',
+                  boxShadow: dashboardTab === 'history' ? '0 2px 8px rgba(37, 31, 25, 0.08)' : 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}
+              >
+                <span>History</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Tab 1: Active 4-Step Wizard Flow */}
+          {dashboardTab === 'campaign' && (
             <div className="animate-fade-in">
-              <SmtpConfigCard 
-                config={smtpConfig}
-                onChange={setSmtpConfig}
+              {/* Guided Step Stepper */}
+              <WizardStepper 
+                currentStep={wizardStep}
+                onStepClick={handleStepClick}
+                isStepCompleted={isStepCompleted}
+                isSending={isSending}
+              />
+
+              {/* Step 1: Connect Gmail */}
+              {wizardStep === 1 && (
+                <div className="animate-fade-in">
+                  <SmtpConfigCard 
+                    config={smtpConfig}
+                    onChange={setSmtpConfig}
+                    csrfToken={csrfToken}
+                    isVerified={isGmailVerified}
+                    onVerifiedChange={setIsGmailVerified}
+                    onContinue={handleNextStep}
+                  />
+                </div>
+              )}
+
+              {/* Step 2: Add Recipients */}
+              {wizardStep === 2 && (
+                <div className="animate-fade-in">
+                  <RecipientManager 
+                    recipients={recipients}
+                    onUpdateRecipients={setRecipients}
+                    onBack={handlePrevStep}
+                    onContinue={handleNextStep}
+                    isStepValid={isStep2Valid}
+                  />
+                </div>
+              )}
+
+              {/* Step 3: Write Email */}
+              {wizardStep === 3 && (
+                <div className="animate-fade-in">
+                  <EmailComposer 
+                    subject={subject}
+                    onSubjectChange={setSubject}
+                    bodyHtml={bodyHtml}
+                    onBodyHtmlChange={setBodyHtml}
+                    attachments={attachments}
+                    onAttachmentsChange={setAttachments}
+                    recipients={recipients}
+                    onBack={handlePrevStep}
+                    onContinue={handleNextStep}
+                    isStepValid={isStep3Valid}
+                  />
+                </div>
+              )}
+
+              {/* Step 4: Review & Send */}
+              {wizardStep === 4 && (
+                <div className="animate-fade-in">
+                  <CampaignMonitor 
+                    smtpConfig={smtpConfig}
+                    subject={subject}
+                    bodyHtml={bodyHtml}
+                    attachments={attachments}
+                    recipients={recipients}
+                    throttleDelay={throttleDelay}
+                    onThrottleChange={setThrottleDelay}
+                    jobState={jobState}
+                    onStartCampaign={handleStartCampaign}
+                    onCancelCampaign={handleCancelCampaign}
+                    onBack={handlePrevStep}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Tab 2: Supabase-Backed Campaign History */}
+          {dashboardTab === 'history' && (
+            <div className="animate-fade-in">
+              <CampaignHistory 
                 csrfToken={csrfToken}
-                isVerified={isGmailVerified}
-                onVerifiedChange={setIsGmailVerified}
-                onContinue={handleNextStep}
-              />
-            </div>
-          )}
-
-          {/* Step 2: Add Recipients */}
-          {wizardStep === 2 && (
-            <div className="animate-fade-in">
-              <RecipientManager 
-                recipients={recipients}
-                onUpdateRecipients={setRecipients}
-                onBack={handlePrevStep}
-                onContinue={handleNextStep}
-                isStepValid={isStep2Valid}
-              />
-            </div>
-          )}
-
-          {/* Step 3: Write Email */}
-          {wizardStep === 3 && (
-            <div className="animate-fade-in">
-              <EmailComposer 
-                subject={subject}
-                onSubjectChange={setSubject}
-                bodyHtml={bodyHtml}
-                onBodyHtmlChange={setBodyHtml}
-                recipients={recipients}
-                onBack={handlePrevStep}
-                onContinue={handleNextStep}
-                isStepValid={isStep3Valid}
-              />
-            </div>
-          )}
-
-          {/* Step 4: Review & Send */}
-          {wizardStep === 4 && (
-            <div className="animate-fade-in">
-              <CampaignMonitor 
-                smtpConfig={smtpConfig}
-                subject={subject}
-                bodyHtml={bodyHtml}
-                recipients={recipients}
-                throttleDelay={throttleDelay}
-                onThrottleChange={setThrottleDelay}
-                jobState={jobState}
-                onStartCampaign={handleStartCampaign}
-                onCancelCampaign={handleCancelCampaign}
-                onBack={handlePrevStep}
+                onSwitchToNewCampaign={() => setDashboardTab('campaign')}
               />
             </div>
           )}
         </main>
+        )
       )}
     </div>
   );
