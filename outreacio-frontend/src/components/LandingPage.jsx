@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Send, ShieldCheck, Zap, CheckCircle2, Clock, 
   ChevronDown, ArrowRight, Star, Check, X, 
@@ -7,10 +7,22 @@ import {
 } from 'lucide-react';
 import FaqSection from './FaqSection';
 import CtaBannerSection from './CtaBannerSection';
+import PlanCard from './PlanCard';
+import { fetchPlans } from '../api/planService.js';
+import { SkeletonPlansGrid } from './SkeletonLoader';
 
 export default function LandingPage({ onLaunchApp, onNavigateContact }) {
   const [activeKpi, setActiveKpi] = useState(0);
   const [activeStep, setActiveStep] = useState(0);
+  const [plans, setPlans] = useState({});
+  const [plansLoading, setPlansLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPlans()
+      .then(setPlans)
+      .catch(err => console.error('Failed to load plans on landing page', err))
+      .finally(() => setPlansLoading(false));
+  }, []);
 
   // 4 Real Working Benefit Cards (Why Outreacio)
   const kpis = [
@@ -550,8 +562,8 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
         </div>
       </section>
 
-      {/* 4. Pricing (Free Tier Only - Real & Simple) */}
-      <section id="pricing" style={{ padding: '60px 0 30px', textAlign: 'center' }}>
+      {/* 4. Pricing (Dynamic Plan Grid matching Pricing Page) */}
+      <section id="pricing" style={{ padding: '60px 20px 40px', textAlign: 'center', maxWidth: '1100px', margin: '0 auto' }}>
         <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
           Pricing
         </div>
@@ -564,77 +576,26 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
         }}>
           Simple &amp; Transparent
         </h2>
-        <p style={{ fontSize: '15px', color: 'var(--text-secondary)', marginBottom: '32px' }}>
-          Start sending personalized cold emails for free today.
+        <p style={{ fontSize: '16px', color: 'var(--text-secondary)', marginBottom: '40px', maxWidth: '520px', margin: '0 auto 40px' }}>
+          Start free. Upgrade whenever you're ready. No hidden fees or surprise charges — ever.
         </p>
 
-        <div style={{ maxWidth: '440px', margin: '0 auto' }}>
-          <div className="parley-card" style={{
-            background: 'var(--bg-white)',
-            textAlign: 'left',
-            padding: '36px',
-            border: '2px solid #f48d16',
-            boxShadow: '0 16px 40px rgba(244, 141, 22, 0.12)'
-          }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <h3 style={{ fontSize: '1.4rem', fontWeight: '700' }}>Free Tier</h3>
-              <span style={{
-                background: 'rgba(31, 190, 109, 0.12)',
-                color: '#128a4d',
-                fontSize: '11px',
-                fontWeight: '700',
-                padding: '4px 10px',
-                borderRadius: '9999px'
-              }}>
-                100% Free
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '14px' }}>
-              <span style={{ fontSize: '2.6rem', fontWeight: '700', color: 'var(--text-primary)' }}>$0</span>
-              <span style={{ color: 'var(--text-muted)', fontSize: '15px' }}>/ month</span>
-            </div>
-
-            <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>
-              Everything you need to send personalized outreach directly through your Gmail account.
-            </p>
-
-            <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 28px', fontSize: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Check size={16} color="#128a4d" style={{ flexShrink: 0 }} />
-                <span>Send up to <strong>100 emails per batch</strong></span>
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Check size={16} color="#128a4d" style={{ flexShrink: 0 }} />
-                <span>Smart CSV &amp; text list parser</span>
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Check size={16} color="#128a4d" style={{ flexShrink: 0 }} />
-                <span>Direct Gmail &amp; Google Workspace connection</span>
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Check size={16} color="#128a4d" style={{ flexShrink: 0 }} />
-                <span>Dynamic <code>{`{{Company Name}}`}</code> personalization</span>
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Check size={16} color="#128a4d" style={{ flexShrink: 0 }} />
-                <span>Anti-spam rate limit controls (200ms–15s)</span>
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Check size={16} color="#128a4d" style={{ flexShrink: 0 }} />
-                <span>Real-time delivery progress &amp; CSV report exports</span>
-              </li>
-              <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Check size={16} color="#128a4d" style={{ flexShrink: 0 }} />
-                <span>Zero password storage (in-memory security)</span>
-              </li>
-            </ul>
-
-            <button onClick={onLaunchApp} className="btn btn-primary" style={{ width: '100%', padding: '12px', fontSize: '15px' }}>
-              Get Started Now
-            </button>
+        {plansLoading ? (
+          <SkeletonPlansGrid />
+        ) : (
+          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '32px' }}>
+            {Object.entries(plans).map(([key, plan]) => (
+              <PlanCard
+                key={key}
+                planKey={key}
+                plan={plan}
+                isPopular={key === 'pro'}
+                isCurrentPlan={false}
+                onUpgradeClick={() => onLaunchApp()}
+              />
+            ))}
           </div>
-        </div>
+        )}
       </section>
 
       {/* 5. Reusable FAQ Section */}

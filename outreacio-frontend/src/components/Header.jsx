@@ -95,46 +95,40 @@ export default function Header({
       {/* Right: Nav Links & Auth / CTA Button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
         <nav className="top-capsule-nav-links">
-          {currentView === 'landing' && (
-            <>
-              <button
-                type="button"
-                className="top-capsule-nav-link"
-                onClick={() => navigate('landing', 'benefits')}
-              >
-                Features
-              </button>
-              <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
+          <button
+            type="button"
+            className={`top-capsule-nav-link ${currentView === 'landing' ? 'active' : ''}`}
+            onClick={() => navigate('landing', 'benefits')}
+          >
+            Features
+          </button>
+          <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
 
-              <button
-                type="button"
-                className="top-capsule-nav-link"
-                onClick={() => navigate('landing', 'how-it-works-sec')}
-              >
-                Workflows
-              </button>
-              <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
+          <button
+            type="button"
+            className="top-capsule-nav-link"
+            onClick={() => navigate('landing', 'how-it-works-sec')}
+          >
+            Workflows
+          </button>
+          <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
 
-              <button
-                type="button"
-                className="top-capsule-nav-link"
-                onClick={() => navigate('landing', 'pricing')}
-              >
-                Pricing
-              </button>
-              <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
-            </>
-          )}
+          <button
+            type="button"
+            className={`top-capsule-nav-link ${currentView === 'pricing' ? 'active' : ''}`}
+            onClick={() => navigate('pricing')}
+          >
+            Pricing
+          </button>
+          <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
 
-          {currentView !== 'contact' && (
-            <button
-              type="button"
-              className="top-capsule-nav-link"
-              onClick={() => navigate('contact')}
-            >
-              Contact
-            </button>
-          )}
+          <button
+            type="button"
+            className={`top-capsule-nav-link ${currentView === 'contact' ? 'active' : ''}`}
+            onClick={() => navigate('contact')}
+          >
+            Contact
+          </button>
         </nav>
 
         {/* User Authenticated Profile Dropdown (Parley Dark Aesthetic) */}

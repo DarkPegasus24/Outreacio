@@ -1,0 +1,62 @@
+{
+  "free": {
+    "id": "free",
+    "name": "Free",
+    "priceMonthly": 0,
+    "inboxLimit": 1,
+    "sendCapDaily": 100,
+    "aiCreditsMonthly": 0,
+    "verificationCreditsMonthly": 0,
+    "features": {
+      "crmIntegration": false,
+      "advancedAnalytics": false,
+      "teamSeats": 1,
+      "priorityQueue": false
+    }
+  },
+  "starter": {
+    "id": "starter",
+    "name": "Starter",
+    "priceMonthly": 17,
+    "inboxLimit": 3,
+    "sendCapDaily": null,
+    "aiCreditsMonthly": 500,
+    "verificationCreditsMonthly": 500,
+    "features": {
+      "crmIntegration": false,
+      "advancedAnalytics": false,
+      "teamSeats": 1,
+      "priorityQueue": false
+    }
+  },
+  "pro": {
+    "id": "pro",
+    "name": "Pro",
+    "priceMonthly": 44,
+    "inboxLimit": null,
+    "sendCapDaily": null,
+    "aiCreditsMonthly": 3000,
+    "verificationCreditsMonthly": 5000,
+    "features": {
+      "crmIntegration": true,
+      "advancedAnalytics": true,
+      "teamSeats": 1,
+      "priorityQueue": true
+    }
+  },
+  "business": {
+    "id": "business",
+    "name": "Business",
+    "priceMonthly": 89,
+    "inboxLimit": null,
+    "sendCapDaily": null,
+    "aiCreditsMonthly": 10000,
+    "verificationCreditsMonthly": 15000,
+    "features": {
+      "crmIntegration": true,
+      "advancedAnalytics": true,
+      "teamSeats": 5,
+      "priorityQueue": true
+    }
+  }
+}

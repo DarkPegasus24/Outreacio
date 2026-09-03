@@ -27,6 +27,8 @@
   --text-muted: #8d857d;
   --text-invert: #f7f7f4;
 
+  --primary: #6366f1;
+  --primary-hover: #4f46e5;
   --accent: #f48d16;
   --accent-hover: #e07d0a;
   --accent-light: rgba(244, 141, 22, 0.12);
@@ -1198,4 +1200,10 @@ header.top-capsule-navbar {
   .review-summary-grid {
     grid-template-columns: 1fr !important;
   }
+}
+
+/* Skeleton Loading Shimmer Effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
