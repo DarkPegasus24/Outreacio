@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Lenis from 'lenis';
 import Header from './components/Header';
+import PricingPage from './components/PricingPage';
 import LandingPage from './components/LandingPage';
 import ContactPage from './components/ContactPage';
 import WizardStepper from './components/WizardStepper';
@@ -12,6 +13,7 @@ import CampaignMonitor from './components/CampaignMonitor';
 import CampaignHistory from './components/CampaignHistory';
 import LoginPage from './components/LoginPage';
 import PageTransitionLoader from './components/PageTransitionLoader';
+import AdminPaymentsPage from './components/AdminPaymentsPage';
 import { supabase } from './supabaseClient';
 import './App.css';
 
@@ -106,6 +108,12 @@ export default function App() {
     if (path.includes('contact')) {
       return 'contact';
     }
+    if (path.includes('pricing')) {
+      return 'pricing';
+    }
+    if (path.includes('admin')) {
+      return 'admin-payments';
+    }
     return 'landing'; // Default starting page is the Landing Page
   };
 
@@ -119,7 +127,7 @@ export default function App() {
   useEffect(() => {
     // Strip any lingering hash if present in URL
     if (window.location.hash) {
-      const cleanPath = currentView === 'dashboard' ? '/dashboard' : (currentView === 'contact' ? '/contact' : (currentView === 'login' ? '/login' : '/'));
+      const cleanPath = currentView === 'dashboard' ? '/dashboard' : (currentView === 'contact' ? '/contact' : (currentView === 'login' ? '/login' : (currentView === 'admin-payments' ? '/admin/payments' : '/')));
       window.history.replaceState({ view: currentView }, '', cleanPath);
     }
 
@@ -138,6 +146,11 @@ export default function App() {
       if (!window.location.pathname.includes('/login')) {
         window.history.pushState({ view: 'login' }, '', '/login');
       }
+    } else if (currentView === 'admin-payments') {
+      document.title = 'Outreacio | Admin Payment Verification';
+      if (!window.location.pathname.includes('/admin/payments')) {
+        window.history.pushState({ view: 'admin-payments' }, '', '/admin/payments');
+      }
     } else {
       document.title = 'Outreacio | Campaign Dashboard';
       if (!window.location.pathname.includes('/dashboard')) {
@@ -154,8 +167,12 @@ export default function App() {
         setCurrentView('login');
       } else if (path.includes('dashboard')) {
         setCurrentView('dashboard');
+      } else if (path.includes('pricing')) {
+        setCurrentView('pricing');
       } else if (path.includes('contact')) {
         setCurrentView('contact');
+      } else if (path.includes('admin')) {
+        setCurrentView('admin-payments');
       } else {
         setCurrentView('landing');
       }
@@ -166,26 +183,11 @@ export default function App() {
   }, []);
 
   const navigateToView = (view) => {
-    if (view === currentView && !isTransitioning) return;
+    if (view === currentView) return;
 
-    // Instant navigation for landing page (no loader)
-    if (view === 'landing') {
-      setIsTransitioning(false);
-      setCurrentView('landing');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-
-    // Smooth transition loader for Dashboard, Contact, and Login
-    setTransitionTarget(view);
-    setIsTransitioning(true);
+    setIsTransitioning(false);
+    setCurrentView(view);
     window.scrollTo({ top: 0, behavior: 'smooth' });
-
-    setTimeout(() => {
-      setCurrentView(view);
-      setIsTransitioning(false);
-      window.scrollTo({ top: 0 });
-    }, 1800); // 1.8 seconds smooth transition loader
   };
 
   const handleLaunchApp = () => {
@@ -513,7 +515,25 @@ export default function App() {
       <Header 
         currentView={currentView}
         onNavigateView={navigateToView}
-        onToggleView={() => navigateToView(currentView === 'dashboard' ? 'landing' : 'dashboard')}
+        onToggleView={() => {
+          if (currentView === 'dashboard') {
+            document.title = 'Outreacio | Campaign Dashboard';
+            if (!window.location.pathname.includes('/dashboard')) {
+              window.history.pushState({ view: 'dashboard' }, '', '/dashboard');
+            }
+          } else if (currentView === 'pricing') {
+            document.title = 'Outreacio | Pricing';
+            if (!window.location.pathname.includes('/pricing')) {
+              window.history.pushState({ view: 'pricing' }, '', '/pricing');
+            }
+          } else {
+            document.title = 'Outreacio | Campaign Dashboard';
+            if (!window.location.pathname.includes('/dashboard')) {
+              window.history.pushState({ view: 'dashboard' }, '', '/dashboard');
+            }
+          }
+          return currentView === 'dashboard' ? 'landing' : 'dashboard';
+        }}
         onOpenHelp={() => setIsHelpOpen(true)}
         onResetAll={handleResetAll}
         user={user}
@@ -550,13 +570,21 @@ export default function App() {
             />
           )}
 
-          {currentView === 'dashboard' && (
-            !authLoading && !user ? (
-              <LoginPage 
-                onLoginSuccess={handleLoginSuccess}
-                onNavigateHome={() => navigateToView('landing')}
-              />
-            ) : (
+          {currentView === 'pricing' && (
+            <PricingPage onUpgrade={() => {}} />
+          )}
+
+          {currentView === 'admin-payments' && (
+            <AdminPaymentsPage onNavigateHome={() => navigateToView('landing')} />
+          )}
+
+          {currentView === 'app' && (
+            (!authLoading && !user) ? (
+            <LoginPage 
+              onLoginSuccess={handleLoginSuccess}
+              onNavigateHome={() => navigateToView('landing')}
+            />
+          ) : (
             <main style={{
               maxWidth: '960px',
               margin: '0 auto',
@@ -715,8 +743,8 @@ export default function App() {
             </div>
           )}
         </main>
-        )
-      )}
+          )
+          )}
         </>
       )}
     </div>

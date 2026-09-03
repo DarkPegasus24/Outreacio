@@ -13,6 +13,276 @@ const supabase = require('./supabaseClient');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ==== Plan Configuration ====
+const PLANS = {
+  free: {
+    id: 'free',
+    name: 'Free',
+    priceMonthly: 0,
+    inboxLimit: 1,
+    sendCapDaily: 100,
+    aiCreditsMonthly: 0,
+    verificationCreditsMonthly: 0,
+    features: {
+      crmIntegration: false,
+      advancedAnalytics: false,
+      teamSeats: 1,
+      priorityQueue: false
+    },
+    limits: {
+      inboxes: 1,
+      sendsPerDay: 100,
+      aiCreditsPerMonth: 0,
+      verificationCreditsPerMonth: 0
+    }
+  },
+  starter: {
+    id: 'starter',
+    name: 'Starter',
+    priceMonthly: 17,
+    inboxLimit: 3,
+    sendCapDaily: null,
+    aiCreditsMonthly: 500,
+    verificationCreditsMonthly: 500,
+    features: {
+      crmIntegration: false,
+      advancedAnalytics: false,
+      teamSeats: 1,
+      priorityQueue: false
+    },
+    limits: {
+      inboxes: 3,
+      sendsPerDay: Infinity,
+      aiCreditsPerMonth: 500,
+      verificationCreditsPerMonth: 500
+    }
+  },
+  pro: {
+    id: 'pro',
+    name: 'Pro',
+    priceMonthly: 44,
+    inboxLimit: null,
+    sendCapDaily: null,
+    aiCreditsMonthly: 3000,
+    verificationCreditsMonthly: 5000,
+    features: {
+      crmIntegration: true,
+      advancedAnalytics: true,
+      teamSeats: 1,
+      priorityQueue: true
+    },
+    limits: {
+      inboxes: Infinity,
+      sendsPerDay: Infinity,
+      aiCreditsPerMonth: 3000,
+      verificationCreditsPerMonth: 5000
+    }
+  },
+  business: {
+    id: 'business',
+    name: 'Business',
+    priceMonthly: 89,
+    inboxLimit: null,
+    sendCapDaily: null,
+    aiCreditsMonthly: 10000,
+    verificationCreditsMonthly: 15000,
+    features: {
+      crmIntegration: true,
+      advancedAnalytics: true,
+      teamSeats: 5,
+      priorityQueue: true
+    },
+    limits: {
+      inboxes: Infinity,
+      sendsPerDay: Infinity,
+      aiCreditsPerMonth: 10000,
+      verificationCreditsPerMonth: 15000
+    }
+  }
+};
+// Endpoint to expose plan definitions to frontend
+app.get('/api/plans', (req, res) => {
+  res.json({ plans: PLANS });
+});
+
+// ==== Manual UPI Payment Bridge (Collection, Verification & Admin) ====
+const { createPaymentController, requireAdmin } = require('./src/controllers/paymentController');
+const paymentController = createPaymentController(PLANS);
+
+// 1. Submit manual payment proof (Multipart: fields + screenshot file)
+app.post('/api/payments/submit', paymentController.uploadMiddleware, async (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
+  if (token) {
+    try {
+      const { data } = await supabase.auth.getUser(token);
+      if (data?.user) {
+        req.userId = data.user.id;
+        req.userEmail = data.user.email;
+      }
+    } catch (e) {
+      // Non-blocking, continue with form data
+    }
+  }
+  return paymentController.submitPayment(req, res);
+});
+
+// 2. Admin: Get all submissions and metrics
+app.get('/api/admin/payments', requireAdmin, paymentController.getAdminPayments);
+
+// 3. Admin: Review submission (Approve / Reject)
+app.post('/api/admin/payments/:id/review', requireAdmin, paymentController.reviewPayment);
+
+// Helper to get plan limits for a user
+async function getUserPlanLimits(userId) {
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('plan_id')
+    .eq('id', userId)
+    .single();
+  if (error || !user) return PLANS.free.limits; // default to free
+  const planKey = user.plan_id || 'free';
+  return (PLANS[planKey] && PLANS[planKey].limits) || PLANS.free.limits;
+}
+
+// ==== Upgrade Plan Endpoint (shortcut payment – stores payment info) ====
+app.post('/api/upgrade-plan', verifyCsrf, requireSupabaseUser, async (req, res) => {
+  const { planId, paymentInfo = {} } = req.body;
+  if (!planId || !PLANS[planId]) {
+    return res.status(400).json({ error: 'Invalid plan selected.' });
+  }
+  try {
+    // 1. Update user plan_id and reset usage counters
+    const { error: updError } = await supabase
+      .from('users')
+      .update({
+        plan_id: planId,
+        send_today_count: 0,
+        verification_today_count: 0,
+        ai_credits_used: 0
+      })
+      .eq('id', req.userId);
+    if (updError) throw updError;
+
+    // 2. Insert subscription record with payment info
+    const { error: subError } = await supabase
+      .from('subscriptions')
+      .insert([{
+        user_id: req.userId,
+        plan_id: planId,
+        status: 'active',
+        started_at: new Date().toISOString(),
+        expires_at: null,
+        payer_name: paymentInfo.payer_name || null,
+        payer_email: paymentInfo.payer_email || null,
+        payment_reference: paymentInfo.payment_reference || null,
+        qr_image_url: paymentInfo.qr_image_url || null
+      }]);
+    if (subError) {
+      // Log but don't fail the whole request – subscription table may not exist yet
+      console.warn('Subscriptions insert warning:', subError.message);
+    }
+
+    // 3. Email/console notification
+    console.log(`[Upgrade] User ${req.userEmail} upgraded to ${PLANS[planId].name}. Payment ref: ${paymentInfo.payment_reference || 'N/A'}`);
+
+    return res.json({ success: true, message: `Upgraded to ${PLANS[planId].name}`, plan: PLANS[planId] });
+  } catch (err) {
+    console.error('Upgrade plan error:', err);
+    return res.status(500).json({ error: 'Failed to upgrade plan.' });
+  }
+});
+
+// ==== GET /api/account/plan – return current plan for logged-in user ====
+app.get('/api/account/plan', requireSupabaseUser, async (req, res) => {
+  try {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('plan_id')
+      .eq('id', req.userId)
+      .single();
+    if (error && error.code !== 'PGRST116') throw error;
+    const planKey = user?.plan_id || 'free';
+    const plan = PLANS[planKey] || PLANS.free;
+    return res.json({ success: true, planId: planKey, plan });
+  } catch (err) {
+    console.error('Get plan error:', err);
+    return res.status(500).json({ error: 'Failed to fetch plan.' });
+  }
+});
+
+// ==== GET /api/account/usage – return usage counters for logged-in user ====
+app.get('/api/account/usage', requireSupabaseUser, async (req, res) => {
+  try {
+    const { data: user, error } = await supabase
+      .from('users')
+      .select('plan_id, send_today_count, ai_credits_used, verification_today_count')
+      .eq('id', req.userId)
+      .single();
+    if (error && error.code !== 'PGRST116') throw error;
+    const planKey = user?.plan_id || 'free';
+    const limits = (PLANS[planKey] && PLANS[planKey].limits) || PLANS.free.limits;
+    return res.json({
+      success: true,
+      planId: planKey,
+      usage: {
+        sendsToday: user?.send_today_count || 0,
+        aiCreditsUsed: user?.ai_credits_used || 0,
+        verificationCreditsUsed: user?.verification_today_count || 0
+      },
+      limits
+    });
+  } catch (err) {
+    console.error('Get usage error:', err);
+    return res.status(500).json({ error: 'Failed to fetch usage.' });
+  }
+});
+
+// ==== Middleware to enforce send limits ====
+async function enforceSendLimits(req, res, next) {
+  const { recipients } = req.body;
+  if (!Array.isArray(recipients)) {
+    return res.status(400).json({ error: 'Recipients list is required.' });
+  }
+  const limits = await getUserPlanLimits(req.userId);
+  const dailyLimit = limits.sendsPerDay;
+  if (dailyLimit !== Infinity && recipients.length > dailyLimit) {
+    return res.status(403).json({
+      error: `LIMIT_REACHED`,
+      type: 'sends',
+      message: `Send limit exceeded. Your plan allows up to ${dailyLimit} emails per day.`
+    });
+  }
+  // Increment send_today_count
+  const { error: incError } = await supabase.rpc
+    ? await supabase.rpc('increment_send_count', { uid: req.userId, amount: recipients.length }).catch(() => ({}))
+    : await supabase.from('users').update({ send_today_count: (await supabase.from('users').select('send_today_count').eq('id', req.userId).single())?.data?.send_today_count + recipients.length }).eq('id', req.userId);
+  if (incError) console.error('Failed to increment send count:', incError);
+  next();
+}
+
+// ==== Cron Jobs ====
+const cron = require('node-cron');
+
+// Daily reset: sends only (midnight UTC)
+cron.schedule('0 0 * * *', async () => {
+  console.log('[Cron] Daily send count reset at', new Date().toISOString());
+  const { error } = await supabase
+    .from('users')
+    .update({ send_today_count: 0 });
+  if (error) console.error('[Cron] Daily reset error:', error);
+});
+
+// Monthly reset: AI credits + verification credits (1st of each month, 00:05 UTC)
+cron.schedule('5 0 1 * *', async () => {
+  console.log('[Cron] Monthly AI/verify credits reset at', new Date().toISOString());
+  const { error } = await supabase
+    .from('users')
+    .update({ ai_credits_used: 0, verification_today_count: 0 });
+  if (error) console.error('[Cron] Monthly reset error:', error);
+});
+
+
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 const JWT_SECRET = process.env.JWT_SECRET || 'outreacio-jwt-session-secret-default-2026';
 
@@ -33,6 +303,7 @@ app.use(cors({
 app.use(cookieParser());
 app.use(express.json({ limit: '30mb' }));
 app.use(express.urlencoded({ extended: true, limit: '30mb' }));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // In-Memory Active Jobs Store (zero disk persistence, ephemeral only)
 const activeJobs = new Map();
@@ -164,7 +435,7 @@ app.post('/api/verify-smtp', verifyCsrf, handleVerifyGmail);
 app.post('/api/test-smtp', verifyCsrf, handleVerifyGmail);
 
 // 2. Start Bulk Send Batch Job
-app.post('/api/send-batch', verifyCsrf, requireSupabaseUser, async (req, res) => {
+app.post('/api/send-batch', verifyCsrf, requireSupabaseUser, enforceSendLimits, async (req, res) => {
     const {
         smtpConfig,
         senderName,
