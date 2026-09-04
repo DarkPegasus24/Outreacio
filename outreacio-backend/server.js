@@ -13,29 +13,59 @@ const supabase = require('./supabaseClient');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// ==== Plan Configuration ====
+// Core Middleware
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ==== Plan Configuration (Email-Focused: Free Tier & $4.99 Paid Plan) ====
 const PLANS = {
   free: {
     id: 'free',
-    name: 'Free',
+    name: 'Free Tier',
     priceMonthly: 0,
+    priceINR: 0,
     inboxLimit: 1,
-    sendCapDaily: 100,
-    aiCreditsMonthly: 0,
-    verificationCreditsMonthly: 0,
+    sendCapDaily: 25,
     features: {
-      crmIntegration: false,
-      advancedAnalytics: false,
-      teamSeats: 1,
+      inboxes: '1 Connected Inbox',
+      sendingVolume: '25 emails / day',
+      csvExcelImport: true,
+      templatePersonalization: true,
+      liveTracking: true,
+      zeroDiskStorage: true,
       priorityQueue: false
     },
     limits: {
       inboxes: 1,
-      sendsPerDay: 100,
-      aiCreditsPerMonth: 0,
-      verificationCreditsPerMonth: 0
+      sendsPerDay: 25
     }
   },
+  pro: {
+    id: 'pro',
+    name: 'Paid Plan',
+    priceMonthly: 4.99,
+    priceINR: 425, // INR equivalent (~₹425/mo at ₹85/$)
+    inboxLimit: null, // Unlimited
+    sendCapDaily: 150, // 150 emails / day
+    features: {
+      inboxes: 'Unlimited Inboxes',
+      sendingVolume: '150 emails / day',
+      csvExcelImport: true,
+      templatePersonalization: true,
+      liveTracking: true,
+      zeroDiskStorage: true,
+      priorityQueue: true
+    },
+    limits: {
+      inboxes: Infinity,
+      sendsPerDay: 150
+    }
+  }
+  /*
+  // COMMENTED OUT: Service limited to dedicated email delivery service
   starter: {
     id: 'starter',
     name: 'Starter',
@@ -55,27 +85,6 @@ const PLANS = {
       sendsPerDay: Infinity,
       aiCreditsPerMonth: 500,
       verificationCreditsPerMonth: 500
-    }
-  },
-  pro: {
-    id: 'pro',
-    name: 'Pro',
-    priceMonthly: 44,
-    inboxLimit: null,
-    sendCapDaily: null,
-    aiCreditsMonthly: 3000,
-    verificationCreditsMonthly: 5000,
-    features: {
-      crmIntegration: true,
-      advancedAnalytics: true,
-      teamSeats: 1,
-      priorityQueue: true
-    },
-    limits: {
-      inboxes: Infinity,
-      sendsPerDay: Infinity,
-      aiCreditsPerMonth: 3000,
-      verificationCreditsPerMonth: 5000
     }
   },
   business: {
@@ -99,6 +108,7 @@ const PLANS = {
       verificationCreditsPerMonth: 15000
     }
   }
+  */
 };
 // Endpoint to expose plan definitions to frontend
 app.get('/api/plans', (req, res) => {
@@ -108,6 +118,21 @@ app.get('/api/plans', (req, res) => {
 // ==== Manual UPI Payment Bridge (Collection, Verification & Admin) ====
 const { createPaymentController, requireAdmin } = require('./src/controllers/paymentController');
 const paymentController = createPaymentController(PLANS);
+
+// ==== Contact Page & Customer Inquiries Handling ====
+const contactController = require('./src/controllers/contactController');
+
+// 1. Submit contact inquiry
+app.post('/api/contact', contactController.submitContact);
+
+// 2. Admin: Get all contact inquiries
+app.get('/api/admin/contacts', requireAdmin, contactController.getAdminContacts);
+
+// 3. Admin: Update contact inquiry status (unread/read/replied)
+app.patch('/api/admin/contacts/:id/status', requireAdmin, contactController.updateContactStatus);
+
+// 4. Admin: Delete contact inquiry
+app.delete('/api/admin/contacts/:id', requireAdmin, contactController.deleteContact);
 
 // 1. Submit manual payment proof (Multipart: fields + screenshot file)
 app.post('/api/payments/submit', paymentController.uploadMiddleware, async (req, res) => {
