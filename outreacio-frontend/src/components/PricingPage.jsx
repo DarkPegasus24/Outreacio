@@ -134,26 +134,7 @@ export default function PricingPage({ onUpgrade, csrfToken }) {
         </div>
       )}
 
-      {/* Single CTA row */}
-      <div style={{ textAlign: 'center', marginBottom: '80px' }}>
-        <button
-          onClick={() => setUpgradeModalOpen(true)}
-          style={{
-            padding: '16px 40px', borderRadius: '14px', border: 'none',
-            background: 'linear-gradient(90deg, var(--accent, #f48d16), #e07d0a)',
-            color: '#fff', fontSize: '16px', fontWeight: '800', cursor: 'pointer',
-            boxShadow: '0 8px 32px rgba(244, 141, 22, 0.35)',
-            transition: 'opacity 0.2s ease, transform 0.2s ease',
-          }}
-          onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-          onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)'; }}
-        >
-          View All Plans & Upgrade →
-        </button>
-        <p style={{ marginTop: '12px', fontSize: '13px', color: 'var(--text-secondary)' }}>
-          No credit card required for Free tier. Pay via UPI for paid plans.
-        </p>
-      </div>
+
 
       {/* FAQ */}
       <div style={{ maxWidth: '720px', marginInline: 'auto' }}>
