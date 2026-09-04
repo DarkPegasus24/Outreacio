@@ -1,16 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAdminPayments, reviewPaymentSubmission } from '../api/planService';
-import { Check, X, Eye, Copy, RefreshCw, Lock, ShieldCheck, AlertCircle, ExternalLink } from 'lucide-react';
+import {
+  fetchAdminPayments,
+  reviewPaymentSubmission,
+  fetchAdminContacts,
+  updateAdminContactStatus,
+  deleteAdminContactMessage
+} from '../api/planService';
+import {
+  Check, X, Eye, Copy, RefreshCw, Lock, ShieldCheck,
+  AlertCircle, ExternalLink, Mail, MessageSquare, Trash2, CheckCircle2, User, Clock
+} from 'lucide-react';
 
 export default function AdminPaymentsPage({ onNavigateHome }) {
   const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem('outreacio_admin_key') || '');
   const [keyInput, setKeyInput] = useState('');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  // Section Navigation
+  const [mainSection, setMainSection] = useState('payments'); // 'payments' | 'contacts'
+
+  // Payment Submissions State
   const [submissions, setSubmissions] = useState([]);
   const [stats, setStats] = useState({ pending: 0, approved: 0, rejected: 0 });
+  const [paymentTab, setPaymentTab] = useState('pending'); // 'pending' | 'history'
+
+  // Contact Inquiries State
+  const [contacts, setContacts] = useState([]);
+  const [contactStats, setContactStats] = useState({ total: 0, unread: 0, read: 0, replied: 0 });
+  const [contactTab, setContactTab] = useState('unread'); // 'unread' | 'all' | 'replied'
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [activeTab, setActiveTab] = useState('pending'); // 'pending' | 'history'
 
   // Modal for screenshot preview
   const [previewImage, setPreviewImage] = useState(null);
@@ -21,16 +41,24 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
   const [actionInProgress, setActionInProgress] = useState(false);
   const [copiedUtr, setCopiedUtr] = useState('');
 
-  const loadPayments = async (keyToUse) => {
+  const loadData = async (keyToUse) => {
     const key = keyToUse ?? adminKey;
     setLoading(true);
     setError('');
     try {
-      const data = await fetchAdminPayments(key);
-      if (data.success) {
+      const [paymentData, contactData] = await Promise.all([
+        fetchAdminPayments(key).catch(e => { throw e; }),
+        fetchAdminContacts(key).catch(() => ({ success: true, contacts: [], stats: { total: 0, unread: 0, read: 0, replied: 0 } }))
+      ]);
+
+      if (paymentData.success) {
         setIsAuthenticated(true);
-        setSubmissions(data.submissions || []);
-        setStats(data.stats || { pending: 0, approved: 0, rejected: 0 });
+        setSubmissions(paymentData.submissions || []);
+        setStats(paymentData.stats || { pending: 0, approved: 0, rejected: 0 });
+      }
+      if (contactData.success) {
+        setContacts(contactData.contacts || []);
+        setContactStats(contactData.stats || { total: 0, unread: 0, read: 0, replied: 0 });
       }
     } catch (err) {
       setIsAuthenticated(false);
@@ -42,7 +70,7 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
 
   useEffect(() => {
     if (adminKey) {
-      loadPayments(adminKey);
+      loadData(adminKey);
     }
   }, [adminKey]);
 
@@ -52,7 +80,7 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
     const cleanKey = keyInput.trim();
     sessionStorage.setItem('outreacio_admin_key', cleanKey);
     setAdminKey(cleanKey);
-    loadPayments(cleanKey);
+    loadData(cleanKey);
   };
 
   const handleLogout = () => {
@@ -60,6 +88,7 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
     setAdminKey('');
     setIsAuthenticated(false);
     setSubmissions([]);
+    setContacts([]);
   };
 
   const handleApprove = async (submission) => {
@@ -70,7 +99,7 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
     setActionInProgress(true);
     try {
       await reviewPaymentSubmission(submission.id, 'approve', '', adminKey);
-      await loadPayments();
+      await loadData();
     } catch (err) {
       alert(`Approval error: ${err.message}`);
     } finally {
@@ -85,11 +114,30 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
       await reviewPaymentSubmission(rejectingItem.id, 'reject', rejectionReason, adminKey);
       setRejectingItem(null);
       setRejectionReason('');
-      await loadPayments();
+      await loadData();
     } catch (err) {
       alert(`Rejection error: ${err.message}`);
     } finally {
       setActionInProgress(false);
+    }
+  };
+
+  const handleContactStatus = async (contactId, newStatus) => {
+    try {
+      await updateAdminContactStatus(contactId, newStatus, '', adminKey);
+      await loadData();
+    } catch (err) {
+      alert(`Error updating message: ${err.message}`);
+    }
+  };
+
+  const handleDeleteContact = async (contactId) => {
+    if (!window.confirm('Are you sure you want to delete this message?')) return;
+    try {
+      await deleteAdminContactMessage(contactId, adminKey);
+      await loadData();
+    } catch (err) {
+      alert(`Error deleting message: ${err.message}`);
     }
   };
 
@@ -101,7 +149,13 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
 
   const pendingSubmissions = submissions.filter(s => s.status === 'pending');
   const historySubmissions = submissions.filter(s => s.status !== 'pending');
-  const displayedSubmissions = activeTab === 'pending' ? pendingSubmissions : historySubmissions;
+  const displayedSubmissions = paymentTab === 'pending' ? pendingSubmissions : historySubmissions;
+
+  const filteredContacts = contacts.filter(c => {
+    if (contactTab === 'unread') return c.status === 'unread';
+    if (contactTab === 'replied') return c.status === 'replied';
+    return true; // 'all'
+  });
 
   // Unauthenticated Admin Passcode Screen
   if (!isAuthenticated) {
@@ -127,10 +181,10 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
           </div>
 
           <h2 style={{ fontSize: '22px', fontWeight: '800', margin: '0 0 6px', color: 'var(--text-primary)' }}>
-            Admin Payments Portal
+            Admin Portal
           </h2>
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginBottom: '24px', lineHeight: 1.5 }}>
-            Manual UPI Verification Bridge &bull; Enter your admin secret key to access pending payment proofs.
+            Manual UPI Verifications &bull; Contact Inquiries &bull; Enter your admin secret key to access.
           </p>
 
           <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -140,14 +194,16 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
               value={keyInput}
               onChange={e => setKeyInput(e.target.value)}
               style={{
-                padding: '12px 16px', borderRadius: '12px', border: '1.5px solid var(--border)',
-                background: 'var(--bg-surface)', fontSize: '14px', outline: 'none'
+                width: '100%', padding: '12px 14px', borderRadius: '12px',
+                border: '1.5px solid var(--border)', background: 'var(--bg-surface)',
+                fontSize: '14px', outline: 'none', boxSizing: 'border-box'
               }}
             />
 
             {error && (
-              <div style={{ fontSize: '12.5px', color: '#ef4444', textAlign: 'left', fontWeight: '500' }}>
-                ⚠️ {error}
+              <div style={{ color: '#dc2626', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
+                <AlertCircle size={15} />
+                <span>{error}</span>
               </div>
             )}
 
@@ -156,16 +212,37 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
               disabled={loading}
               style={{
                 padding: '12px', borderRadius: '12px', border: 'none',
-                background: 'var(--primary, #6366f1)', color: '#fff',
-                fontSize: '14.5px', fontWeight: '700', cursor: 'pointer'
+                background: 'linear-gradient(135deg, #f48d16, #e07d0a)',
+                color: '#fff', fontSize: '14.5px', fontWeight: '700', cursor: 'pointer'
               }}
             >
               {loading ? 'Authenticating…' : 'Access Admin Dashboard →'}
             </button>
           </form>
 
-          <div style={{ marginTop: '20px', fontSize: '12px', color: 'var(--text-muted)' }}>
-            Default development key: <code>outreacio-admin-2026</code>
+          <div style={{ marginTop: '20px', fontSize: '12.5px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <span>Default key: <code>outreacio-admin-2026</code></span>
+            <button
+              type="button"
+              onClick={() => {
+                setKeyInput('outreacio-admin-2026');
+                sessionStorage.setItem('outreacio_admin_key', 'outreacio-admin-2026');
+                setAdminKey('outreacio-admin-2026');
+                loadData('outreacio-admin-2026');
+              }}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--accent, #f48d16)',
+                cursor: 'pointer',
+                fontWeight: '700',
+                textDecoration: 'underline',
+                padding: 0,
+                fontSize: '12px'
+              }}
+            >
+              (Click to Autofill &amp; Login)
+            </button>
           </div>
         </div>
       </div>
@@ -175,27 +252,27 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
   return (
     <div style={{ maxWidth: '1140px', margin: '0 auto', padding: '36px 20px 80px', fontFamily: 'inherit' }}>
       {/* Header bar */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '28px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <h1 style={{ fontSize: '26px', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
-              Manual UPI Payment Verification
+              Outreacio Admin Dashboard
             </h1>
             <span style={{
               background: '#fef3c7', color: '#92400e', fontSize: '11px', fontWeight: '700',
               padding: '3px 10px', borderRadius: '99px', textTransform: 'uppercase'
             }}>
-              Bridge Mode
+              Active Session
             </span>
           </div>
           <p style={{ margin: '4px 0 0', fontSize: '14px', color: 'var(--text-secondary)' }}>
-            Human-in-the-loop payment verification before Razorpay integration.
+            Manage manual payment verifications and respond to customer contact inquiries.
           </p>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
-            onClick={() => loadPayments()}
+            onClick={() => loadData()}
             disabled={loading}
             style={{
               display: 'flex', alignItems: 'center', gap: '6px', padding: '9px 16px',
@@ -219,231 +296,525 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
-        <div style={{ background: 'var(--bg-white, #fff)', border: '1.5px solid var(--border)', borderRadius: '16px', padding: '20px' }}>
-          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
-            Pending Verification
-          </div>
-          <div style={{ fontSize: '32px', fontWeight: '800', color: stats.pending > 0 ? '#d97706' : 'var(--text-primary)' }}>
-            {stats.pending}
-          </div>
-        </div>
-
-        <div style={{ background: 'var(--bg-white, #fff)', border: '1.5px solid var(--border)', borderRadius: '16px', padding: '20px' }}>
-          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
-            Approved (Active)
-          </div>
-          <div style={{ fontSize: '32px', fontWeight: '800', color: '#16a34a' }}>
-            {stats.approved}
-          </div>
-        </div>
-
-        <div style={{ background: 'var(--bg-white, #fff)', border: '1.5px solid var(--border)', borderRadius: '16px', padding: '20px' }}>
-          <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
-            Rejected
-          </div>
-          <div style={{ fontSize: '32px', fontWeight: '800', color: '#dc2626' }}>
-            {stats.rejected}
-          </div>
-        </div>
-      </div>
-
-      {/* Tabs */}
-      <div style={{ display: 'flex', gap: '10px', borderBottom: '1.5px solid var(--border)', marginBottom: '20px', paddingBottom: '2px' }}>
+      {/* Main Section Switcher: Payments vs Contacts */}
+      <div style={{
+        display: 'flex',
+        gap: '8px',
+        background: 'var(--bg-surface)',
+        padding: '6px',
+        borderRadius: '14px',
+        border: '1px solid var(--border)',
+        marginBottom: '28px',
+        width: 'fit-content'
+      }}>
         <button
-          onClick={() => setActiveTab('pending')}
+          type="button"
+          onClick={() => setMainSection('payments')}
           style={{
-            padding: '10px 18px', border: 'none', background: 'none', cursor: 'pointer',
-            fontSize: '14.5px', fontWeight: activeTab === 'pending' ? '800' : '600',
-            color: activeTab === 'pending' ? 'var(--primary, #6366f1)' : 'var(--text-secondary)',
-            borderBottom: activeTab === 'pending' ? '2.5px solid var(--primary, #6366f1)' : '2.5px solid transparent'
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            border: 'none',
+            background: mainSection === 'payments' ? 'var(--bg-white, #fff)' : 'transparent',
+            color: mainSection === 'payments' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            fontWeight: '700',
+            fontSize: '14px',
+            padding: '8px 18px',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            boxShadow: mainSection === 'payments' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+            transition: 'all 0.15s ease'
           }}
         >
-          Pending Review ({pendingSubmissions.length})
+          <span>💳 UPI Payment Proofs</span>
+          {stats.pending > 0 && (
+            <span style={{
+              background: '#d97706',
+              color: '#fff',
+              fontSize: '11px',
+              padding: '2px 7px',
+              borderRadius: '99px'
+            }}>
+              {stats.pending}
+            </span>
+          )}
         </button>
+
         <button
-          onClick={() => setActiveTab('history')}
+          type="button"
+          onClick={() => setMainSection('contacts')}
           style={{
-            padding: '10px 18px', border: 'none', background: 'none', cursor: 'pointer',
-            fontSize: '14.5px', fontWeight: activeTab === 'history' ? '800' : '600',
-            color: activeTab === 'history' ? 'var(--primary, #6366f1)' : 'var(--text-secondary)',
-            borderBottom: activeTab === 'history' ? '2.5px solid var(--primary, #6366f1)' : '2.5px solid transparent'
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            border: 'none',
+            background: mainSection === 'contacts' ? 'var(--bg-white, #fff)' : 'transparent',
+            color: mainSection === 'contacts' ? 'var(--text-primary)' : 'var(--text-secondary)',
+            fontWeight: '700',
+            fontSize: '14px',
+            padding: '8px 18px',
+            borderRadius: '10px',
+            cursor: 'pointer',
+            boxShadow: mainSection === 'contacts' ? '0 2px 8px rgba(0,0,0,0.06)' : 'none',
+            transition: 'all 0.15s ease'
           }}
         >
-          History &amp; Resolved ({historySubmissions.length})
+          <span>📬 User Inquiries</span>
+          {contactStats.unread > 0 && (
+            <span style={{
+              background: '#f48d16',
+              color: '#fff',
+              fontSize: '11px',
+              padding: '2px 7px',
+              borderRadius: '99px'
+            }}>
+              {contactStats.unread} new
+            </span>
+          )}
         </button>
       </div>
 
-      {/* Submissions List */}
-      {displayedSubmissions.length === 0 ? (
-        <div style={{
-          background: 'var(--bg-white, #fff)', border: '1.5px solid var(--border)', borderRadius: '20px',
-          padding: '60px 20px', textAlign: 'center', color: 'var(--text-secondary)'
-        }}>
-          <div style={{ fontSize: '36px', marginBottom: '10px' }}>✓</div>
-          <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 6px', color: 'var(--text-primary)' }}>
-            {activeTab === 'pending' ? 'All caught up!' : 'No previous submissions yet.'}
-          </h3>
-          <p style={{ fontSize: '14px', margin: 0 }}>
-            {activeTab === 'pending' ? 'There are no pending payment proofs awaiting manual verification.' : ''}
-          </p>
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          {displayedSubmissions.map((sub) => (
-            <div
-              key={sub.id}
+      {/* ================= SECTION 1: PAYMENTS ================= */}
+      {mainSection === 'payments' && (
+        <>
+          {/* Stats Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+            <div style={{ background: 'var(--bg-white, #fff)', border: '1.5px solid var(--border)', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                Pending Verification
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: stats.pending > 0 ? '#d97706' : 'var(--text-primary)' }}>
+                {stats.pending}
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--bg-white, #fff)', border: '1.5px solid var(--border)', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                Approved (Active)
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: '#16a34a' }}>
+                {stats.approved}
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--bg-white, #fff)', border: '1.5px solid var(--border)', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                Rejected
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: '#dc2626' }}>
+                {stats.rejected}
+              </div>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <div style={{ display: 'flex', gap: '10px', borderBottom: '1.5px solid var(--border)', marginBottom: '20px', paddingBottom: '2px' }}>
+            <button
+              onClick={() => setPaymentTab('pending')}
               style={{
-                background: 'var(--bg-white, #fff)',
-                border: sub.status === 'pending' ? '1.5px solid #fde68a' : '1px solid var(--border)',
-                borderRadius: '16px',
-                padding: '20px 24px',
-                display: 'grid',
-                gridTemplateColumns: 'minmax(220px, 1.2fr) minmax(140px, 0.8fr) minmax(180px, 1fr) minmax(100px, 0.7fr) minmax(160px, 1fr)',
-                alignItems: 'center',
-                gap: '16px',
-                boxShadow: sub.status === 'pending' ? '0 4px 16px rgba(245, 158, 11, 0.08)' : 'none'
+                padding: '10px 18px', border: 'none', background: 'none', cursor: 'pointer',
+                fontSize: '14.5px', fontWeight: paymentTab === 'pending' ? '800' : '600',
+                color: paymentTab === 'pending' ? 'var(--primary, #6366f1)' : 'var(--text-secondary)',
+                borderBottom: paymentTab === 'pending' ? '2.5px solid var(--primary, #6366f1)' : '2.5px solid transparent'
               }}
             >
-              {/* User info */}
-              <div>
-                <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)' }}>
-                  {sub.payer_name || 'Customer'}
-                </div>
-                <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '2px', wordBreak: 'break-all' }}>
-                  {sub.user_email}
-                </div>
-                <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px' }}>
-                  Submitted: {new Date(sub.created_at).toLocaleString()}
-                </div>
-              </div>
+              Pending Review ({pendingSubmissions.length})
+            </button>
+            <button
+              onClick={() => setPaymentTab('history')}
+              style={{
+                padding: '10px 18px', border: 'none', background: 'none', cursor: 'pointer',
+                fontSize: '14.5px', fontWeight: paymentTab === 'history' ? '800' : '600',
+                color: paymentTab === 'history' ? 'var(--primary, #6366f1)' : 'var(--text-secondary)',
+                borderBottom: paymentTab === 'history' ? '2.5px solid var(--primary, #6366f1)' : '2.5px solid transparent'
+              }}
+            >
+              History &amp; Resolved ({historySubmissions.length})
+            </button>
+          </div>
 
-              {/* Plan info */}
-              <div>
-                <span style={{
-                  display: 'inline-block',
-                  background: sub.plan_id === 'pro' ? 'linear-gradient(90deg, #6366f1, #7c3aed)' : 'var(--bg-surface)',
-                  color: sub.plan_id === 'pro' ? '#fff' : 'var(--text-primary)',
-                  fontSize: '12px', fontWeight: '800', padding: '4px 10px', borderRadius: '8px',
-                  textTransform: 'uppercase'
-                }}>
-                  {sub.plan_id}
-                </span>
-                <div style={{ fontSize: '14px', fontWeight: '700', marginTop: '4px' }}>
-                  ${sub.amount_usd}/mo
-                </div>
-              </div>
-
-              {/* UTR reference with 1-click copy */}
-              <div>
-                <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', marginBottom: '2px' }}>
-                  Bank UTR Reference
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <code style={{ fontSize: '13.5px', fontWeight: '700', color: 'var(--text-primary)', background: 'var(--bg-surface)', padding: '3px 6px', borderRadius: '6px' }}>
-                    {sub.utr_reference}
-                  </code>
-                  <button
-                    onClick={() => copyUtr(sub.utr_reference)}
-                    title="Copy UTR"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiedUtr === sub.utr_reference ? '#16a34a' : 'var(--text-muted)', padding: '2px' }}
-                  >
-                    {copiedUtr === sub.utr_reference ? <Check size={14} /> : <Copy size={14} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Screenshot thumbnail */}
-              <div>
-                {sub.screenshot_url ? (
-                  <button
-                    onClick={() => setPreviewImage(sub.screenshot_url)}
-                    style={{
-                      display: 'flex', alignItems: 'center', gap: '6px', background: 'var(--bg-surface)',
-                      border: '1px solid var(--border)', borderRadius: '8px', padding: '6px 10px',
-                      fontSize: '12px', fontWeight: '600', cursor: 'pointer', color: 'var(--text-primary)'
-                    }}
-                  >
-                    <Eye size={14} />
-                    View Proof
-                  </button>
-                ) : (
-                  <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>No screenshot</span>
-                )}
-              </div>
-
-              {/* Action Buttons or Status */}
-              <div style={{ textAlign: 'right' }}>
-                {sub.status === 'pending' ? (
-                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                    <button
-                      onClick={() => handleApprove(sub)}
-                      disabled={actionInProgress}
-                      style={{
-                        padding: '8px 14px', borderRadius: '10px', border: 'none',
-                        background: '#16a34a', color: '#fff', fontSize: '13px', fontWeight: '700',
-                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
-                      }}
-                    >
-                      <Check size={14} /> Approve
-                    </button>
-                    <button
-                      onClick={() => { setRejectingItem(sub); setRejectionReason(''); }}
-                      disabled={actionInProgress}
-                      style={{
-                        padding: '8px 14px', borderRadius: '10px', border: 'none',
-                        background: '#ef4444', color: '#fff', fontSize: '13px', fontWeight: '700',
-                        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px'
-                      }}
-                    >
-                      <X size={14} /> Reject
-                    </button>
+          {/* Submissions List */}
+          {displayedSubmissions.length === 0 ? (
+            <div style={{
+              background: 'var(--bg-white, #fff)', border: '1.5px solid var(--border)', borderRadius: '20px',
+              padding: '60px 20px', textAlign: 'center', color: 'var(--text-secondary)'
+            }}>
+              <div style={{ fontSize: '36px', marginBottom: '10px' }}>✓</div>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 6px', color: 'var(--text-primary)' }}>
+                {paymentTab === 'pending' ? 'All caught up!' : 'No previous submissions yet.'}
+              </h3>
+              <p style={{ fontSize: '14px', margin: 0 }}>
+                {paymentTab === 'pending' ? 'There are no pending payment proofs awaiting manual verification.' : ''}
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {displayedSubmissions.map((sub) => (
+                <div
+                  key={sub.id}
+                  style={{
+                    background: 'var(--bg-white, #fff)',
+                    border: sub.status === 'pending' ? '1.5px solid #fde68a' : '1px solid var(--border)',
+                    borderRadius: '16px',
+                    padding: '20px 24px',
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '16px',
+                    boxShadow: sub.status === 'pending' ? '0 4px 20px rgba(217, 119, 6, 0.08)' : 'none'
+                  }}
+                >
+                  {/* User & Plan Info */}
+                  <div style={{ minWidth: '220px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <span style={{
+                        padding: '3px 8px', borderRadius: '6px', fontSize: '11px', fontWeight: '800',
+                        textTransform: 'uppercase',
+                        background: sub.plan_id === 'pro' ? 'linear-gradient(90deg, #f48d16, #e07d0a)' : 'var(--bg-surface)',
+                        color: sub.plan_id === 'pro' ? '#fff' : 'var(--text-primary)',
+                      }}>
+                        {sub.plan_id} Plan
+                      </span>
+                      <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>
+                        {new Date(sub.created_at).toLocaleString()}
+                      </span>
+                    </div>
+                    <div style={{ fontWeight: '700', fontSize: '15px', color: 'var(--text-primary)' }}>
+                      {sub.payer_name || 'Subscriber'}
+                    </div>
+                    <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>
+                      {sub.user_email}
+                    </div>
                   </div>
-                ) : (
-                  <div>
-                    <span style={{
-                      fontSize: '12px', fontWeight: '700', padding: '4px 10px', borderRadius: '8px',
-                      textTransform: 'uppercase',
-                      background: sub.status === 'approved' ? 'rgba(22, 163, 74, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                      color: sub.status === 'approved' ? '#16a34a' : '#dc2626'
-                    }}>
-                      {sub.status}
-                    </span>
-                    {sub.rejection_reason && (
-                      <div style={{ fontSize: '11px', color: '#dc2626', marginTop: '4px' }}>
-                        {sub.rejection_reason}
+
+                  {/* UTR Reference & Screenshot Proof */}
+                  <div style={{ minWidth: '200px' }}>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '700', marginBottom: '2px' }}>
+                      Transaction UTR
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{
+                        fontFamily: 'monospace', fontWeight: '700', fontSize: '14px',
+                        background: 'var(--bg-surface)', padding: '3px 8px', borderRadius: '6px',
+                        border: '1px solid var(--border)'
+                      }}>
+                        {sub.utr_reference}
+                      </span>
+                      <button
+                        onClick={() => copyUtr(sub.utr_reference)}
+                        title="Copy UTR"
+                        style={{ background: 'none', border: 'none', cursor: 'pointer', color: copiedUtr === sub.utr_reference ? '#16a34a' : 'var(--text-secondary)', padding: '2px' }}
+                      >
+                        {copiedUtr === sub.utr_reference ? <Check size={14} /> : <Copy size={14} />}
+                      </button>
+                    </div>
+                    {sub.screenshot_url && (
+                      <button
+                        onClick={() => setPreviewImage(sub.screenshot_url)}
+                        style={{
+                          marginTop: '6px', background: 'none', border: 'none', cursor: 'pointer',
+                          color: '#0284c7', fontSize: '12.5px', fontWeight: '600', padding: 0,
+                          display: 'flex', alignItems: 'center', gap: '4px'
+                        }}
+                      >
+                        <Eye size={13} /> View Screenshot Proof
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Status & Review Actions */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    {sub.status === 'pending' ? (
+                      <>
+                        <button
+                          onClick={() => handleApprove(sub)}
+                          disabled={actionInProgress}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '6px',
+                            background: '#16a34a', color: '#fff', border: 'none', borderRadius: '10px',
+                            padding: '9px 16px', fontSize: '13.5px', fontWeight: '700', cursor: 'pointer'
+                          }}
+                        >
+                          <Check size={15} /> Approve &amp; Activate
+                        </button>
+                        <button
+                          onClick={() => setRejectingItem(sub)}
+                          disabled={actionInProgress}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '6px',
+                            background: 'rgba(239, 68, 68, 0.1)', color: '#dc2626', border: '1px solid rgba(239, 68, 68, 0.2)',
+                            borderRadius: '10px', padding: '9px 14px', fontSize: '13.5px', fontWeight: '600', cursor: 'pointer'
+                          }}
+                        >
+                          <X size={15} /> Reject
+                        </button>
+                      </>
+                    ) : (
+                      <div style={{ textAlign: 'right' }}>
+                        <span style={{
+                          display: 'inline-block',
+                          padding: '4px 12px', borderRadius: '99px', fontSize: '12px', fontWeight: '700',
+                          textTransform: 'uppercase',
+                          background: sub.status === 'approved' ? 'rgba(22, 163, 74, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                          color: sub.status === 'approved' ? '#16a34a' : '#dc2626'
+                        }}>
+                          {sub.status === 'approved' ? '✓ Approved' : '✗ Rejected'}
+                        </span>
+                        {sub.rejection_reason && (
+                          <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginTop: '4px', maxWidth: '200px' }}>
+                            Reason: {sub.rejection_reason}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
-                )}
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ================= SECTION 2: CONTACT INQUIRIES ================= */}
+      {mainSection === 'contacts' && (
+        <>
+          {/* Stats Cards */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '32px' }}>
+            <div style={{ background: 'var(--bg-white, #fff)', border: '1.5px solid var(--border)', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                Unread Messages
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: contactStats.unread > 0 ? '#f48d16' : 'var(--text-primary)' }}>
+                {contactStats.unread}
               </div>
             </div>
-          ))}
-        </div>
+
+            <div style={{ background: 'var(--bg-white, #fff)', border: '1.5px solid var(--border)', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                Replied / Handled
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: '#16a34a' }}>
+                {contactStats.replied}
+              </div>
+            </div>
+
+            <div style={{ background: 'var(--bg-white, #fff)', border: '1.5px solid var(--border)', borderRadius: '16px', padding: '20px' }}>
+              <div style={{ fontSize: '13px', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                Total Received
+              </div>
+              <div style={{ fontSize: '32px', fontWeight: '800', color: 'var(--text-primary)' }}>
+                {contactStats.total}
+              </div>
+            </div>
+          </div>
+
+          {/* Subtabs for Contacts */}
+          <div style={{ display: 'flex', gap: '10px', borderBottom: '1.5px solid var(--border)', marginBottom: '20px', paddingBottom: '2px' }}>
+            <button
+              onClick={() => setContactTab('unread')}
+              style={{
+                padding: '10px 18px', border: 'none', background: 'none', cursor: 'pointer',
+                fontSize: '14.5px', fontWeight: contactTab === 'unread' ? '800' : '600',
+                color: contactTab === 'unread' ? 'var(--accent, #f48d16)' : 'var(--text-secondary)',
+                borderBottom: contactTab === 'unread' ? '2.5px solid var(--accent, #f48d16)' : '2.5px solid transparent'
+              }}
+            >
+              Unread ({contactStats.unread})
+            </button>
+            <button
+              onClick={() => setContactTab('all')}
+              style={{
+                padding: '10px 18px', border: 'none', background: 'none', cursor: 'pointer',
+                fontSize: '14.5px', fontWeight: contactTab === 'all' ? '800' : '600',
+                color: contactTab === 'all' ? 'var(--accent, #f48d16)' : 'var(--text-secondary)',
+                borderBottom: contactTab === 'all' ? '2.5px solid var(--accent, #f48d16)' : '2.5px solid transparent'
+              }}
+            >
+              All Inquiries ({contactStats.total})
+            </button>
+            <button
+              onClick={() => setContactTab('replied')}
+              style={{
+                padding: '10px 18px', border: 'none', background: 'none', cursor: 'pointer',
+                fontSize: '14.5px', fontWeight: contactTab === 'replied' ? '800' : '600',
+                color: contactTab === 'replied' ? 'var(--accent, #f48d16)' : 'var(--text-secondary)',
+                borderBottom: contactTab === 'replied' ? '2.5px solid var(--accent, #f48d16)' : '2.5px solid transparent'
+              }}
+            >
+              Replied ({contactStats.replied})
+            </button>
+          </div>
+
+          {/* Contact Inquiries Cards */}
+          {filteredContacts.length === 0 ? (
+            <div style={{
+              background: 'var(--bg-white, #fff)', border: '1.5px solid var(--border)', borderRadius: '20px',
+              padding: '60px 20px', textAlign: 'center', color: 'var(--text-secondary)'
+            }}>
+              <div style={{ fontSize: '36px', marginBottom: '10px' }}>📬</div>
+              <h3 style={{ fontSize: '18px', fontWeight: '700', margin: '0 0 6px', color: 'var(--text-primary)' }}>
+                {contactTab === 'unread' ? 'No unread messages' : 'No messages found.'}
+              </h3>
+              <p style={{ fontSize: '14px', margin: 0 }}>
+                {contactTab === 'unread' ? 'All contact requests have been reviewed or replied to.' : ''}
+              </p>
+            </div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {filteredContacts.map((item) => (
+                <div
+                  key={item.id}
+                  style={{
+                    background: 'var(--bg-white, #fff)',
+                    border: item.status === 'unread' ? '1.5px solid #fed7aa' : '1px solid var(--border)',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    boxShadow: item.status === 'unread' ? '0 4px 20px rgba(244, 141, 22, 0.08)' : 'none'
+                  }}
+                >
+                  {/* Top Header of Card */}
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '14px' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '17px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                          {item.name}
+                        </span>
+                        <span style={{
+                          padding: '3px 9px', borderRadius: '99px', fontSize: '11px', fontWeight: '700',
+                          textTransform: 'uppercase',
+                          background: item.status === 'unread' ? '#ffedd5' : (item.status === 'replied' ? '#dcfce7' : '#e0f2fe'),
+                          color: item.status === 'unread' ? '#c2410c' : (item.status === 'replied' ? '#15803d' : '#0369a1')
+                        }}>
+                          {item.status}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '14px', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        <span>
+                          Email: <a href={`mailto:${item.email}?subject=Re: Outreacio Inquiry`} style={{ color: 'var(--accent, #f48d16)', fontWeight: '600', textDecoration: 'none' }}>{item.email}</a>
+                        </span>
+                        <span style={{ fontSize: '12.5px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                          <Clock size={13} /> {new Date(item.created_at).toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Actions on this message */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <a
+                        href={`mailto:${item.email}?subject=Re: Outreacio Inquiry - ${encodeURIComponent(item.name)}`}
+                        onClick={() => {
+                          if (item.status === 'unread') {
+                            handleContactStatus(item.id, 'replied');
+                          }
+                        }}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '6px',
+                          background: 'var(--accent, #f48d16)', color: '#fff', textDecoration: 'none',
+                          padding: '7px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: '700'
+                        }}
+                      >
+                        <Mail size={14} /> Reply via Email
+                      </a>
+
+                      {item.status === 'unread' ? (
+                        <button
+                          type="button"
+                          onClick={() => handleContactStatus(item.id, 'read')}
+                          style={{
+                            background: 'var(--bg-surface)', border: '1px solid var(--border)',
+                            padding: '7px 12px', borderRadius: '8px', fontSize: '12.5px', fontWeight: '600',
+                            cursor: 'pointer', color: 'var(--text-primary)'
+                          }}
+                        >
+                          Mark as Read
+                        </button>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleContactStatus(item.id, 'unread')}
+                          style={{
+                            background: 'var(--bg-surface)', border: '1px solid var(--border)',
+                            padding: '7px 12px', borderRadius: '8px', fontSize: '12.5px', fontWeight: '600',
+                            cursor: 'pointer', color: 'var(--text-secondary)'
+                          }}
+                        >
+                          Mark Unread
+                        </button>
+                      )}
+
+                      {item.status !== 'replied' && (
+                        <button
+                          type="button"
+                          onClick={() => handleContactStatus(item.id, 'replied')}
+                          style={{
+                            background: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.3)',
+                            padding: '7px 12px', borderRadius: '8px', fontSize: '12.5px', fontWeight: '600',
+                            cursor: 'pointer', color: '#15803d'
+                          }}
+                        >
+                          Mark Replied
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteContact(item.id)}
+                        title="Delete Message"
+                        style={{
+                          background: 'rgba(239, 68, 68, 0.08)', border: '1px solid rgba(239, 68, 68, 0.2)',
+                          padding: '7px 10px', borderRadius: '8px', cursor: 'pointer', color: '#dc2626'
+                        }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Message Content Box */}
+                  <div style={{
+                    background: 'var(--bg-surface)',
+                    border: '1px solid var(--border)',
+                    borderRadius: '12px',
+                    padding: '16px 18px',
+                    fontSize: '14.5px',
+                    lineHeight: 1.6,
+                    color: 'var(--text-primary)',
+                    whiteSpace: 'pre-wrap'
+                  }}>
+                    {item.message}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {/* Screenshot Preview Modal */}
       {previewImage && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
-        }} onClick={() => setPreviewImage(null)}>
-          <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}>
+        <div
+          onClick={() => setPreviewImage(null)}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 9999, background: 'rgba(0,0,0,0.85)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', cursor: 'zoom-out'
+          }}
+        >
+          <div style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }} onClick={e => e.stopPropagation()}>
             <img
               src={previewImage}
-              alt="Payment Proof"
-              style={{ maxWidth: '100%', maxHeight: '85vh', borderRadius: '12px', boxShadow: '0 20px 60px rgba(0,0,0,0.5)' }}
+              alt="Payment Screenshot Proof"
+              style={{ maxWidth: '100%', maxHeight: '85vh', borderRadius: '12px', objectFit: 'contain' }}
             />
             <button
               onClick={() => setPreviewImage(null)}
               style={{
-                position: 'absolute', top: '-14px', right: '-14px', background: '#fff',
-                border: 'none', borderRadius: '50%', width: '32px', height: '32px',
-                fontWeight: '800', cursor: 'pointer', boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                position: 'absolute', top: '-14px', right: '-14px', background: '#251f19',
+                color: '#fff', border: '2px solid #fff', borderRadius: '50%', width: '32px', height: '32px',
+                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
               }}
             >
-              ✕
+              <X size={18} />
             </button>
           </div>
         </div>

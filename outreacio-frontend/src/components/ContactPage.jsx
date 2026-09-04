@@ -1,15 +1,29 @@
 import React, { useState } from 'react';
-import { Mail, MessageSquare, Clock, Send, CheckCircle2 } from 'lucide-react';
+import { Mail, MessageSquare, Clock, Send, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
 import FaqSection from './FaqSection';
 import CtaBannerSection from './CtaBannerSection';
+import { submitContactMessage } from '../api/planService';
 
 export default function ContactPage({ onLaunchApp }) {
-  const [formSubmitted, setFormSubmitted] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', message: '' });
+  const [submitting, setSubmitting] = useState(false);
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setFormSubmitted(true);
+    setErrorMsg('');
+    setSubmitting(true);
+
+    try {
+      await submitContactMessage(formData);
+      setFormSubmitted(true);
+      setFormData({ name: '', email: '', message: '' });
+    } catch (err) {
+      setErrorMsg(err.message || 'Failed to send your message. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -33,7 +47,7 @@ export default function ContactPage({ onLaunchApp }) {
             <span style={{ fontStyle: 'italic', fontWeight: 400, color: 'var(--text-secondary)' }}>We're here to help.</span>
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.6 }}>
-            Have a question about deliverability, Gmail setup, or cold email tips? Our team responds within 2 business hours.
+            Have a question about email deliverability, Gmail setup, or pricing plans? Our team responds within 2 business hours.
           </p>
         </div>
 
@@ -42,34 +56,67 @@ export default function ContactPage({ onLaunchApp }) {
           maxWidth: '640px',
           margin: '0 auto'
         }}>
-          {/* Contact Message Form */}
           <div className="parley-card" style={{ background: 'var(--bg-white)', padding: '36px', boxShadow: '0 16px 40px rgba(37, 31, 25, 0.08)' }}>
             <h3 style={{ fontSize: '1.35rem', fontWeight: '700', marginBottom: '8px' }}>Send us a message</h3>
             <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '24px' }}>
               Fill out the details below and we will get back to you promptly.
             </p>
 
+            {errorMsg && (
+              <div style={{
+                background: 'rgba(239, 68, 68, 0.08)',
+                border: '1px solid rgba(239, 68, 68, 0.25)',
+                color: '#dc2626',
+                borderRadius: '10px',
+                padding: '12px 16px',
+                fontSize: '13.5px',
+                marginBottom: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <AlertCircle size={16} style={{ flexShrink: 0 }} />
+                <span>{errorMsg}</span>
+              </div>
+            )}
+
             {formSubmitted ? (
               <div style={{
                 background: 'rgba(31, 190, 109, 0.08)',
                 border: '1px solid rgba(31, 190, 109, 0.25)',
                 borderRadius: '12px',
-                padding: '28px 20px',
+                padding: '32px 20px',
                 textAlign: 'center'
               }}>
-                <CheckCircle2 size={36} color="#128a4d" style={{ margin: '0 auto 10px' }} />
-                <h4 style={{ fontSize: '1.15rem', fontWeight: '700', color: '#128a4d', marginBottom: '6px' }}>
+                <CheckCircle2 size={40} color="#128a4d" style={{ margin: '0 auto 12px' }} />
+                <h4 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#128a4d', marginBottom: '8px' }}>
                   Message Received!
                 </h4>
-                <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)' }}>
-                  Thank you for reaching out. We will review your inquiry and email you back shortly.
+                <p style={{ fontSize: '14px', color: 'var(--text-secondary)', maxWidth: '420px', margin: '0 auto 20px', lineHeight: 1.6 }}>
+                  Thank you for reaching out. We have received your inquiry and our support team will reply directly to your email address shortly.
                 </p>
+                <button
+                  type="button"
+                  onClick={() => setFormSubmitted(false)}
+                  style={{
+                    background: 'transparent',
+                    border: '1px solid rgba(37, 31, 25, 0.2)',
+                    borderRadius: '8px',
+                    padding: '8px 18px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    color: 'var(--text-primary)'
+                  }}
+                >
+                  Send Another Message
+                </button>
               </div>
             ) : (
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
                   <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', marginBottom: '5px' }}>
-                    Your Name
+                    Your Name *
                   </label>
                   <input
                     type="text"
@@ -79,7 +126,7 @@ export default function ContactPage({ onLaunchApp }) {
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                     style={{
                       width: '100%',
-                      padding: '10px 14px',
+                      padding: '11px 14px',
                       borderRadius: '8px',
                       border: '1px solid var(--border)',
                       background: 'var(--bg-surface)',
@@ -91,7 +138,7 @@ export default function ContactPage({ onLaunchApp }) {
 
                 <div>
                   <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', marginBottom: '5px' }}>
-                    Email Address
+                    Email Address *
                   </label>
                   <input
                     type="email"
@@ -101,7 +148,7 @@ export default function ContactPage({ onLaunchApp }) {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     style={{
                       width: '100%',
-                      padding: '10px 14px',
+                      padding: '11px 14px',
                       borderRadius: '8px',
                       border: '1px solid var(--border)',
                       background: 'var(--bg-surface)',
@@ -113,7 +160,7 @@ export default function ContactPage({ onLaunchApp }) {
 
                 <div>
                   <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', marginBottom: '5px' }}>
-                    How can we help?
+                    How can we help? *
                   </label>
                   <textarea
                     rows={4}
@@ -123,7 +170,7 @@ export default function ContactPage({ onLaunchApp }) {
                     onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                     style={{
                       width: '100%',
-                      padding: '10px 14px',
+                      padding: '11px 14px',
                       borderRadius: '8px',
                       border: '1px solid var(--border)',
                       background: 'var(--bg-surface)',
@@ -136,13 +183,22 @@ export default function ContactPage({ onLaunchApp }) {
 
                 <button
                   type="submit"
+                  disabled={submitting}
                   className="parley-chat-btn"
-                  style={{ alignSelf: 'flex-start', marginTop: '6px', padding: '5px 20px 5px 5px' }}
+                  style={{
+                    alignSelf: 'flex-start',
+                    marginTop: '6px',
+                    padding: '5px 20px 5px 5px',
+                    opacity: submitting ? 0.7 : 1,
+                    cursor: submitting ? 'not-allowed' : 'pointer'
+                  }}
                 >
                   <div className="parley-chat-icon" style={{ width: '32px', height: '32px', fontSize: '14px' }}>
-                    <Send size={15} />
+                    {submitting ? <Loader2 size={16} className="animate-spin" /> : <Send size={15} />}
                   </div>
-                  <span style={{ fontSize: '14.5px' }}>Submit Message</span>
+                  <span style={{ fontSize: '14.5px' }}>
+                    {submitting ? 'Sending Message...' : 'Submit Message'}
+                  </span>
                 </button>
               </form>
             )}

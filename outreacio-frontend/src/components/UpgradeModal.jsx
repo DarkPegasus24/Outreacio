@@ -160,7 +160,9 @@ export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans, cs
               Select a plan below to pay via UPI. Payments are manually verified and activated within 2–4 hours.
             </p>
             <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center' }}>
-              {Object.entries(plans).map(([key, plan]) => (
+              {Object.entries(plans)
+                .filter(([key]) => key === 'free' || key === 'pro')
+                .map(([key, plan]) => (
                 <PlanCard
                   key={key}
                   planKey={key}
@@ -208,7 +210,7 @@ export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans, cs
                 </span>
               </div>
               <div>UPI ID: <strong style={{ userSelect: 'all', background: 'rgba(2, 132, 199, 0.1)', padding: '2px 6px', borderRadius: '6px' }}>outreacio@upi</strong></div>
-              <div>Amount to Pay: <strong>${selectedPlan.priceMonthly} USD (or equivalent INR ₹{selectedPlan.priceMonthly * 85})</strong></div>
+              <div>Amount to Pay: <strong>${selectedPlan.priceMonthly} USD (or equivalent INR ₹{selectedPlan.priceINR || Math.round(selectedPlan.priceMonthly * 85)})</strong></div>
               <div style={{ fontSize: '12px', color: '#075985', marginTop: '6px' }}>
                 ✓ No payment gateway fees &bull; Instant human verification &bull; Receipt emailed upon approval
               </div>
