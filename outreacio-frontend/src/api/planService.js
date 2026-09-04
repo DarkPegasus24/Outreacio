@@ -111,3 +111,71 @@ export async function reviewPaymentSubmission(submissionId, decision, reason = '
   return res.json();
 }
 
+/** Submit contact message from Contact Page */
+export async function submitContactMessage({ name, email, message }) {
+  const res = await fetch('/api/contact', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name, email, message })
+  });
+  const data = await res.json().catch(() => ({ error: 'Submission failed' }));
+  if (!res.ok) {
+    throw new Error(data.error || 'Failed to submit contact message.');
+  }
+  return data;
+}
+
+/** Fetch all contact messages for admin view */
+export async function fetchAdminContacts(adminKey = '') {
+  const token = await getAuthToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(adminKey ? { 'x-admin-key': adminKey } : {})
+  };
+  const res = await fetch('/api/admin/contacts', { headers });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Unauthorized or failed' }));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+/** Admin update contact message status (read, replied, unread) */
+export async function updateAdminContactStatus(contactId, status, adminNotes = '', adminKey = '') {
+  const token = await getAuthToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(adminKey ? { 'x-admin-key': adminKey } : {})
+  };
+  const res = await fetch(`/api/admin/contacts/${contactId}/status`, {
+    method: 'PATCH',
+    headers,
+    body: JSON.stringify({ status, adminNotes })
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Update failed' }));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}
+
+/** Admin delete contact message */
+export async function deleteAdminContactMessage(contactId, adminKey = '') {
+  const token = await getAuthToken();
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...(adminKey ? { 'x-admin-key': adminKey } : {})
+  };
+  const res = await fetch(`/api/admin/contacts/${contactId}`, {
+    method: 'DELETE',
+    headers
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({ error: 'Deletion failed' }));
+    throw new Error(err.error || `HTTP ${res.status}`);
+  }
+  return res.json();
+}

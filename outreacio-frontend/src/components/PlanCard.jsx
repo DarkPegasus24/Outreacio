@@ -1,10 +1,13 @@
 import React from 'react';
 
+/*
+// COMMENTED OUT: Service limited to dedicated email delivery service
 const FEATURE_LABELS = {
   crmIntegration: 'CRM Integration',
   advancedAnalytics: 'Advanced Analytics',
   priorityQueue: 'Priority Send Queue',
 };
+*/
 
 const CHECK_ICON = (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
@@ -19,51 +22,106 @@ const X_ICON = (
   </svg>
 );
 
-export default function PlanCard({ planKey, plan, isPopular, onUpgradeClick, isCurrentPlan }) {
+export default function PlanCard({
+  planKey,
+  plan,
+  isPopular,
+  onUpgradeClick,
+  isCurrentPlan,
+  currency = 'USD'
+}) {
   if (!plan) return null;
 
   const {
     name = planKey || '',
     priceMonthly = 0,
+    priceINR = 425,
     inboxLimit = null,
-    sendCapDaily = null,
-    aiCreditsMonthly = 0,
-    verificationCreditsMonthly = 0,
-    features = {}
+    sendCapDaily = null
   } = plan;
 
-  const safeFeatures = features || {};
-  const teamSeats = safeFeatures.teamSeats ?? 1;
+  const isFree = priceMonthly === 0;
 
+  // Dedicated email delivery feature matrix
   const featureRows = [
-    { label: `${inboxLimit === null ? 'Unlimited' : inboxLimit} inbox${inboxLimit !== 1 ? 'es' : ''}`, enabled: true },
-    { label: sendCapDaily === null ? 'Unlimited daily sends' : `${sendCapDaily} emails / day`, enabled: true },
-    { label: aiCreditsMonthly > 0 ? `${aiCreditsMonthly.toLocaleString()} AI credits / mo` : 'No AI credits', enabled: aiCreditsMonthly > 0 },
-    { label: verificationCreditsMonthly > 0 ? `${verificationCreditsMonthly.toLocaleString()} verification credits / mo` : 'No verification credits', enabled: verificationCreditsMonthly > 0 },
-    { label: `${teamSeats} team seat${teamSeats !== 1 ? 's' : ''}`, enabled: true },
-    ...Object.entries(FEATURE_LABELS).map(([key, label]) => ({ label, enabled: !!safeFeatures[key] })),
+    {
+      label: inboxLimit === null ? 'Unlimited Connected Inboxes' : `${inboxLimit} Connected Inbox (Gmail)`,
+      enabled: true
+    },
+    {
+      label: sendCapDaily === null ? 'Unlimited daily sends (Provider limits)' : `${sendCapDaily} emails / day`,
+      enabled: true
+    },
+    {
+      label: 'Smart Multi-Sheet Excel & CSV parser',
+      enabled: true
+    },
+    {
+      label: 'Dynamic tags ({{Name}}, {{Company}})',
+      enabled: true
+    },
+    {
+      label: 'Real-time delivery tracking & logs',
+      enabled: true
+    },
+    {
+      label: 'Zero disk storage (Safe in-memory SMTP)',
+      enabled: true
+    },
+    {
+      label: 'Priority email dispatch & faster rate',
+      enabled: !isFree
+    }
   ];
+
+  /*
+  // COMMENTED OUT: AI and non-email features removed as service is now email focused
+  const nonEmailFeatures = [
+    { label: `${teamSeats} team seats`, enabled: false },
+    { label: 'AI personalization credits', enabled: false },
+    { label: 'Verification credits', enabled: false },
+    { label: 'CRM integration & webhook sync', enabled: false }
+  ];
+  */
+
+  // Price formatting based on currency
+  const displayPrice = isFree
+    ? (currency === 'INR' ? '₹0' : 'Free')
+    : (currency === 'INR' ? `₹${priceINR || 425}` : `$${priceMonthly}`);
+
+  const conversionNote = isFree
+    ? 'Free forever • No card needed'
+    : currency === 'INR'
+      ? `≈ $${priceMonthly} USD / month`
+      : `≈ ₹${priceINR || 425} INR / month`;
 
   return (
     <div style={{
       position: 'relative',
       display: 'flex',
       flexDirection: 'column',
-      flex: '1 1 220px',
-      maxWidth: '280px',
-      minWidth: '200px',
+      flex: '1 1 280px',
+      maxWidth: '340px',
+      minWidth: '260px',
       background: isPopular ? 'linear-gradient(145deg, #f48d16 0%, #e07d0a 100%)' : 'var(--bg-surface)',
       border: isPopular ? 'none' : '1.5px solid var(--border)',
       borderRadius: '20px',
-      padding: '28px 24px 24px',
+      padding: '32px 26px 26px',
       boxShadow: isPopular
         ? '0 20px 60px rgba(244, 141, 22, 0.38)'
         : '0 4px 24px rgba(0,0,0,0.06)',
       transition: 'transform 0.2s ease, box-shadow 0.2s ease',
       cursor: 'default',
+      textAlign: 'left'
     }}
-    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = isPopular ? '0 28px 72px rgba(244, 141, 22, 0.5)' : '0 12px 40px rgba(0,0,0,0.12)'; }}
-    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isPopular ? '0 20px 60px rgba(244, 141, 22, 0.38)' : '0 4px 24px rgba(0,0,0,0.06)'; }}
+    onMouseEnter={e => {
+      e.currentTarget.style.transform = 'translateY(-4px)';
+      e.currentTarget.style.boxShadow = isPopular ? '0 28px 72px rgba(244, 141, 22, 0.5)' : '0 12px 40px rgba(0,0,0,0.12)';
+    }}
+    onMouseLeave={e => {
+      e.currentTarget.style.transform = 'translateY(0)';
+      e.currentTarget.style.boxShadow = isPopular ? '0 20px 60px rgba(244, 141, 22, 0.38)' : '0 4px 24px rgba(0,0,0,0.06)';
+    }}
     >
       {isPopular && (
         <div style={{
@@ -79,24 +137,46 @@ export default function PlanCard({ planKey, plan, isPopular, onUpgradeClick, isC
       )}
 
       <div style={{ marginBottom: '8px' }}>
-        <p style={{ margin: 0, fontSize: '13px', fontWeight: '600', color: isPopular ? 'rgba(255,255,255,0.7)' : 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+        <p style={{
+          margin: 0,
+          fontSize: '13px',
+          fontWeight: '700',
+          color: isPopular ? 'rgba(255,255,255,0.8)' : 'var(--text-secondary)',
+          textTransform: 'uppercase',
+          letterSpacing: '0.08em'
+        }}>
           {name}
         </p>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginTop: '6px' }}>
-          <span style={{ fontSize: '38px', fontWeight: '800', color: isPopular ? '#fff' : 'var(--text-primary)', lineHeight: 1 }}>
-            {priceMonthly === 0 ? 'Free' : `$${priceMonthly}`}
+          <span style={{ fontSize: '42px', fontWeight: '800', color: isPopular ? '#fff' : 'var(--text-primary)', lineHeight: 1 }}>
+            {displayPrice}
           </span>
-          {priceMonthly > 0 && (
-            <span style={{ fontSize: '14px', color: isPopular ? 'rgba(255,255,255,0.6)' : 'var(--text-secondary)' }}>/mo</span>
+          {!isFree && (
+            <span style={{ fontSize: '15px', color: isPopular ? 'rgba(255,255,255,0.7)' : 'var(--text-secondary)' }}>/mo</span>
           )}
+        </div>
+        <div style={{
+          fontSize: '12px',
+          marginTop: '6px',
+          color: isPopular ? 'rgba(255,255,255,0.75)' : 'var(--text-secondary)',
+          fontWeight: '500'
+        }}>
+          {conversionNote}
         </div>
       </div>
 
       <hr style={{ border: 'none', borderTop: isPopular ? '1px solid rgba(255,255,255,0.2)' : '1px solid var(--border)', margin: '16px 0' }} />
 
-      <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 24px', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+      <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 26px', display: 'flex', flexDirection: 'column', gap: '11px', flex: 1 }}>
         {featureRows.map(({ label, enabled }) => (
-          <li key={label} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: enabled ? (isPopular ? '#fff' : 'var(--text-primary)') : (isPopular ? 'rgba(255,255,255,0.45)' : 'var(--text-secondary)') }}>
+          <li key={label} style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            fontSize: '13.5px',
+            lineHeight: 1.4,
+            color: enabled ? (isPopular ? '#fff' : 'var(--text-primary)') : (isPopular ? 'rgba(255,255,255,0.45)' : 'var(--text-secondary)')
+          }}>
             {enabled
               ? <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}><circle cx="8" cy="8" r="8" fill={isPopular ? 'rgba(255,255,255,0.2)' : 'rgba(244, 141, 22, 0.12)'} /><path d="M4.5 8l2.5 2.5 4.5-5" stroke={isPopular ? '#fff' : 'var(--accent, #f48d16)'} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
               : X_ICON
@@ -111,10 +191,10 @@ export default function PlanCard({ planKey, plan, isPopular, onUpgradeClick, isC
         disabled={isCurrentPlan}
         style={{
           width: '100%',
-          padding: '12px',
+          padding: '13px',
           borderRadius: '12px',
           cursor: isCurrentPlan ? 'default' : 'pointer',
-          fontSize: '14px',
+          fontSize: '14.5px',
           fontWeight: '700',
           background: isCurrentPlan ? 'rgba(0,0,0,0.06)' : '#ffffff',
           color: isCurrentPlan
@@ -140,7 +220,7 @@ export default function PlanCard({ planKey, plan, isPopular, onUpgradeClick, isC
           }
         }}
       >
-        {isCurrentPlan ? '✓ Current Plan' : priceMonthly === 0 ? 'Get Started Free' : `Upgrade to ${name}`}
+        {isCurrentPlan ? '✓ Current Plan' : isFree ? 'Get Started Free' : `Upgrade to ${name}`}
       </button>
     </div>
   );
