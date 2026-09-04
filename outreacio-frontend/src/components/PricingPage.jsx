@@ -101,7 +101,7 @@ export default function PricingPage({ onUpgrade, csrfToken }) {
       {/* Hero */}
       <div style={{ textAlign: 'center', marginBottom: '56px' }}>
         <div style={{
-          display: 'inline-block', background: 'linear-gradient(90deg, var(--primary), #7c3aed)',
+          display: 'inline-block', background: 'linear-gradient(90deg, var(--accent, #f48d16), #e07d0a)',
           WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
           fontSize: '13px', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase',
           marginBottom: '12px',
@@ -140,9 +140,9 @@ export default function PricingPage({ onUpgrade, csrfToken }) {
           onClick={() => setUpgradeModalOpen(true)}
           style={{
             padding: '16px 40px', borderRadius: '14px', border: 'none',
-            background: 'linear-gradient(90deg, var(--primary), #7c3aed)',
+            background: 'linear-gradient(90deg, var(--accent, #f48d16), #e07d0a)',
             color: '#fff', fontSize: '16px', fontWeight: '800', cursor: 'pointer',
-            boxShadow: '0 8px 32px rgba(99,102,241,0.35)',
+            boxShadow: '0 8px 32px rgba(244, 141, 22, 0.35)',
             transition: 'opacity 0.2s ease, transform 0.2s ease',
           }}
           onMouseEnter={e => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-2px)'; }}

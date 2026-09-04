@@ -8,8 +8,8 @@ const FEATURE_LABELS = {
 
 const CHECK_ICON = (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-    <circle cx="8" cy="8" r="8" fill="var(--primary)" opacity="0.12" />
-    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--primary)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.12" />
+    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
   </svg>
 );
 const X_ICON = (
@@ -52,25 +52,27 @@ export default function PlanCard({ planKey, plan, isPopular, onUpgradeClick, isC
       flex: '1 1 220px',
       maxWidth: '280px',
       minWidth: '200px',
-      background: isPopular ? 'linear-gradient(145deg, var(--primary, #6366f1) 0%, #7c3aed 100%)' : 'var(--bg-surface)',
+      background: isPopular ? 'linear-gradient(145deg, #f48d16 0%, #e07d0a 100%)' : 'var(--bg-surface)',
       border: isPopular ? 'none' : '1.5px solid var(--border)',
       borderRadius: '20px',
       padding: '28px 24px 24px',
       boxShadow: isPopular
-        ? '0 20px 60px rgba(99,102,241,0.35)'
+        ? '0 20px 60px rgba(244, 141, 22, 0.38)'
         : '0 4px 24px rgba(0,0,0,0.06)',
       transition: 'transform 0.2s ease, box-shadow 0.2s ease',
       cursor: 'default',
     }}
-    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = isPopular ? '0 28px 72px rgba(99,102,241,0.45)' : '0 12px 40px rgba(0,0,0,0.12)'; }}
-    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isPopular ? '0 20px 60px rgba(99,102,241,0.35)' : '0 4px 24px rgba(0,0,0,0.06)'; }}
+    onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.boxShadow = isPopular ? '0 28px 72px rgba(244, 141, 22, 0.5)' : '0 12px 40px rgba(0,0,0,0.12)'; }}
+    onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = isPopular ? '0 20px 60px rgba(244, 141, 22, 0.38)' : '0 4px 24px rgba(0,0,0,0.06)'; }}
     >
       {isPopular && (
         <div style={{
           position: 'absolute', top: '-14px', left: '50%', transform: 'translateX(-50%)',
-          background: 'linear-gradient(90deg, #f59e0b, #ef4444)',
+          background: '#251f19',
           color: '#fff', fontSize: '11px', fontWeight: '700', letterSpacing: '0.08em',
-          padding: '4px 14px', borderRadius: '20px', textTransform: 'uppercase', whiteSpace: 'nowrap'
+          padding: '5px 16px', borderRadius: '20px', textTransform: 'uppercase', whiteSpace: 'nowrap',
+          boxShadow: '0 4px 14px rgba(37, 31, 25, 0.25)',
+          border: '1px solid rgba(255, 255, 255, 0.15)',
         }}>
           Most Popular
         </div>
@@ -96,7 +98,7 @@ export default function PlanCard({ planKey, plan, isPopular, onUpgradeClick, isC
         {featureRows.map(({ label, enabled }) => (
           <li key={label} style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', color: enabled ? (isPopular ? '#fff' : 'var(--text-primary)') : (isPopular ? 'rgba(255,255,255,0.45)' : 'var(--text-secondary)') }}>
             {enabled
-              ? <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}><circle cx="8" cy="8" r="8" fill="rgba(255,255,255,0.2)" /><path d="M4.5 8l2.5 2.5 4.5-5" stroke={isPopular ? '#fff' : 'var(--primary)'} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              ? <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}><circle cx="8" cy="8" r="8" fill={isPopular ? 'rgba(255,255,255,0.2)' : 'rgba(244, 141, 22, 0.12)'} /><path d="M4.5 8l2.5 2.5 4.5-5" stroke={isPopular ? '#fff' : 'var(--accent, #f48d16)'} strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
               : X_ICON
             }
             {label}
@@ -108,17 +110,35 @@ export default function PlanCard({ planKey, plan, isPopular, onUpgradeClick, isC
         onClick={() => !isCurrentPlan && onUpgradeClick(planKey, plan)}
         disabled={isCurrentPlan}
         style={{
-          width: '100%', padding: '12px', borderRadius: '12px', border: 'none', cursor: isCurrentPlan ? 'default' : 'pointer',
-          fontSize: '14px', fontWeight: '700',
-          background: isCurrentPlan ? 'rgba(0,0,0,0.1)' : (isPopular ? 'rgba(255,255,255,0.18)' : 'var(--primary)'),
-          color: isCurrentPlan ? (isPopular ? 'rgba(255,255,255,0.5)' : 'var(--text-secondary)') : (isPopular ? '#fff' : '#fff'),
-          backdropFilter: isPopular && !isCurrentPlan ? 'blur(8px)' : 'none',
-          border: isPopular && !isCurrentPlan ? '1.5px solid rgba(255,255,255,0.3)' : 'none',
-          transition: 'all 0.2s ease',
-          letterSpacing: '0.02em',
+          width: '100%',
+          padding: '12px',
+          borderRadius: '12px',
+          cursor: isCurrentPlan ? 'default' : 'pointer',
+          fontSize: '14px',
+          fontWeight: '700',
+          background: isCurrentPlan ? 'rgba(0,0,0,0.06)' : '#ffffff',
+          color: isCurrentPlan
+            ? 'var(--text-muted)'
+            : isPopular
+              ? '#251f19'
+              : 'var(--text-primary)',
+          border: isCurrentPlan ? '1px solid transparent' : '1px solid rgba(37, 31, 25, 0.12)',
+          boxShadow: isCurrentPlan ? 'none' : '0 2px 8px rgba(0,0,0,0.06)',
+          transition: 'transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease',
+          letterSpacing: '0.01em',
         }}
-        onMouseEnter={e => { if (!isCurrentPlan) { e.currentTarget.style.opacity = '0.85'; e.currentTarget.style.transform = 'scale(1.02)'; }}}
-        onMouseLeave={e => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1)'; }}
+        onMouseEnter={e => {
+          if (!isCurrentPlan) {
+            e.currentTarget.style.transform = 'translateY(-2px)';
+            e.currentTarget.style.boxShadow = '0 6px 16px rgba(0,0,0,0.12)';
+          }
+        }}
+        onMouseLeave={e => {
+          if (!isCurrentPlan) {
+            e.currentTarget.style.transform = 'translateY(0)';
+            e.currentTarget.style.boxShadow = '0 2px 8px rgba(0,0,0,0.06)';
+          }
+        }}
       >
         {isCurrentPlan ? '✓ Current Plan' : priceMonthly === 0 ? 'Get Started Free' : `Upgrade to ${name}`}
       </button>
