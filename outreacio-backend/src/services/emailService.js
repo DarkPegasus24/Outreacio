@@ -178,7 +178,82 @@ async function sendPaymentRejectedEmail({ to, name, planName, utr, reason }) {
   }
 }
 
+/**
+ * Send notification to admins when a user submits the Contact Page form
+ */
+async function sendContactNotificationEmail({ name, email, message, submittedAt }) {
+  const dateStr = submittedAt ? new Date(submittedAt).toLocaleString() : new Date().toLocaleString();
+  const subject = `📬 [Outreacio Contact] New Inquiry from ${name || 'User'} (${email})`;
+  const from = process.env.SYSTEM_EMAIL_FROM || process.env.SYSTEM_EMAIL_USER || 'Outreacio Contact <contact@outreacio.com>';
+  const to = process.env.ADMIN_NOTIFICATION_EMAIL || process.env.ADMIN_EMAILS || process.env.SYSTEM_EMAIL_USER || 'solvers.real@gmail.com';
+
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 32px 20px; color: #251f19; background-color: #f7f7f4; border-radius: 16px;">
+      <div style="text-align: center; margin-bottom: 24px;">
+        <h1 style="color: #f48d16; margin: 0; font-size: 26px; font-weight: 800;">Outreacio</h1>
+        <p style="color: #5c554e; font-size: 14px; margin-top: 4px;">New Contact Form Message</p>
+      </div>
+
+      <div style="background: #ffffff; padding: 28px; border-radius: 12px; border: 1px solid rgba(37,31,25,0.08); box-shadow: 0 4px 16px rgba(0,0,0,0.04);">
+        <h2 style="margin-top: 0; color: #251f19; font-size: 19px;">Inquiry Details</h2>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 14px;">
+          <tr>
+            <td style="padding: 8px 0; color: #8d857d; width: 100px;"><strong>From:</strong></td>
+            <td style="padding: 8px 0; color: #251f19; font-weight: 600;">${name}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #8d857d;"><strong>Email:</strong></td>
+            <td style="padding: 8px 0;"><a href="mailto:${email}" style="color: #f48d16; text-decoration: none; font-weight: 600;">${email}</a></td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #8d857d;"><strong>Date:</strong></td>
+            <td style="padding: 8px 0; color: #5c554e;">${dateStr}</td>
+          </tr>
+        </table>
+
+        <div style="background: #f8f7f4; border-left: 4px solid #f48d16; border-radius: 6px; padding: 16px; margin: 18px 0;">
+          <div style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: #8d857d; margin-bottom: 8px;">User Message:</div>
+          <div style="font-size: 15px; line-height: 1.6; color: #251f19; white-space: pre-wrap;">${message}</div>
+        </div>
+
+        <div style="text-align: center; margin-top: 24px;">
+          <a href="mailto:${email}?subject=Re: Outreacio Inquiry - ${encodeURIComponent(name)}" style="display: inline-block; background: #f48d16; color: #ffffff; text-decoration: none; font-weight: 700; font-size: 14px; padding: 12px 24px; border-radius: 8px;">
+            Reply to ${email} &rarr;
+          </a>
+        </div>
+      </div>
+    </div>
+  `;
+
+  const transporter = getTransporter();
+  if (!transporter) {
+    console.log(`[Email Service] (Mock / No SMTP configured) New Contact Message from ${email}:\n`, {
+      name,
+      email,
+      message,
+      submittedAt: dateStr
+    });
+    return { success: true, mocked: true };
+  }
+
+  try {
+    const info = await transporter.sendMail({
+      from,
+      to,
+      replyTo: email,
+      subject,
+      html
+    });
+    return { success: true, messageId: info.messageId };
+  } catch (err) {
+    console.error('[Email Service] Failed to send contact notification email:', err.message);
+    return { success: false, error: err.message };
+  }
+}
+
 module.exports = {
   sendPaymentApprovedEmail,
-  sendPaymentRejectedEmail
+  sendPaymentRejectedEmail,
+  sendContactNotificationEmail
 };
+
