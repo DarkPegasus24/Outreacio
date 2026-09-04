@@ -16,6 +16,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
   const [activeStep, setActiveStep] = useState(0);
   const [plans, setPlans] = useState({});
   const [plansLoading, setPlansLoading] = useState(true);
+  const [currency, setCurrency] = useState('USD'); // 'USD' | 'INR'
 
   useEffect(() => {
     fetchPlans()
@@ -562,7 +563,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
         </div>
       </section>
 
-      {/* 4. Pricing (Dynamic Plan Grid matching Pricing Page) */}
+      {/* 4. Pricing (Dynamic Plan Grid: Free Tier & $4.99 Paid Plan) */}
       <section id="pricing" style={{ padding: '60px 20px 40px', textAlign: 'center', maxWidth: '1100px', margin: '0 auto' }}>
         <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
           Pricing
@@ -576,23 +577,83 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
         }}>
           Simple &amp; Transparent
         </h2>
-        <p style={{ fontSize: '16px', color: 'var(--text-secondary)', marginBottom: '40px', maxWidth: '520px', margin: '0 auto 40px' }}>
+        <p style={{ fontSize: '16px', color: 'var(--text-secondary)', marginBottom: '24px', maxWidth: '520px', margin: '0 auto 24px' }}>
           Start free. Upgrade whenever you're ready. No hidden fees or surprise charges — ever.
         </p>
+
+        {/* Currency Switcher Toggle */}
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: 'var(--bg-surface)',
+          border: '1px solid var(--border)',
+          borderRadius: '999px',
+          padding: '4px',
+          marginBottom: '36px',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+        }}>
+          <button
+            type="button"
+            onClick={() => setCurrency('USD')}
+            style={{
+              border: 'none',
+              background: currency === 'USD' ? 'var(--accent, #f48d16)' : 'transparent',
+              color: currency === 'USD' ? '#ffffff' : 'var(--text-secondary)',
+              fontWeight: '700',
+              fontSize: '13px',
+              padding: '6px 16px',
+              borderRadius: '999px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            🇺🇸 USD ($)
+          </button>
+          <button
+            type="button"
+            onClick={() => setCurrency('INR')}
+            style={{
+              border: 'none',
+              background: currency === 'INR' ? 'var(--accent, #f48d16)' : 'transparent',
+              color: currency === 'INR' ? '#ffffff' : 'var(--text-secondary)',
+              fontWeight: '700',
+              fontSize: '13px',
+              padding: '6px 16px',
+              borderRadius: '999px',
+              cursor: 'pointer',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            🇮🇳 INR (₹)
+          </button>
+        </div>
 
         {plansLoading ? (
           <SkeletonPlansGrid />
         ) : (
-          <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', justifyContent: 'center', marginBottom: '32px' }}>
-            {Object.entries(plans).map(([key, plan]) => (
-              <PlanCard
-                key={key}
-                planKey={key}
-                plan={plan}
-                isPopular={key === 'pro'}
-                isCurrentPlan={false}
-                onUpgradeClick={() => onLaunchApp()}
-              />
+          <div style={{
+            display: 'flex',
+            gap: '28px',
+            flexWrap: 'wrap',
+            justifyContent: 'center',
+            alignItems: 'stretch',
+            marginBottom: '32px',
+            maxWidth: '780px',
+            marginInline: 'auto'
+          }}>
+            {Object.entries(plans)
+              .filter(([key]) => key === 'free' || key === 'pro')
+              .map(([key, plan]) => (
+                <PlanCard
+                  key={key}
+                  planKey={key}
+                  plan={plan}
+                  currency={currency}
+                  isPopular={key === 'pro'}
+                  isCurrentPlan={false}
+                  onUpgradeClick={() => onLaunchApp()}
+                />
             ))}
           </div>
         )}
