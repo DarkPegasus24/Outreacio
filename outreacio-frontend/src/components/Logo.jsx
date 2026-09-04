@@ -1,33 +1,49 @@
 import React from 'react';
 
 /**
- * Parley-styled brand wordmark:
- * Ultra-bold grotesque typography with signature stencil-slit cut through the letter 'e'.
+ * Outreacio brand logo:
+ * New icon + wordmark side by side.
  */
 export default function Logo({ size = 'md', style = {}, onClick }) {
   const sizeStyles = {
-    sm: { fontSize: '1.3rem' },
-    md: { fontSize: '1.65rem' },
-    lg: { fontSize: '2.4rem' },
-    xl: { fontSize: '3.2rem' }
+    sm: { fontSize: '1.3rem', imgSize: '28px' },
+    md: { fontSize: '1.65rem', imgSize: '36px' },
+    lg: { fontSize: '2.4rem', imgSize: '52px' },
+    xl: { fontSize: '3.2rem', imgSize: '68px' }
   };
 
-  const selectedSize = typeof size === 'string' ? sizeStyles[size] || sizeStyles.md : { fontSize: `${size}px` };
+  const selected = typeof size === 'string' ? sizeStyles[size] || sizeStyles.md : { fontSize: `${size}px`, imgSize: `${size}px` };
 
   return (
     <div
       onClick={onClick}
-      className="brand-wordmark"
       style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '10px',
         cursor: onClick ? 'pointer' : 'default',
-        ...selectedSize,
         ...style
       }}
       title="Outreacio"
     >
-      <span>Outr</span>
-      <span className="brand-wordmark-cut-e">e</span>
-      <span>acio</span>
+      <img
+        src="/logo.png"
+        alt="Outreacio Logo"
+        style={{
+          width: selected.imgSize,
+          height: selected.imgSize,
+          objectFit: 'contain',
+          flexShrink: 0
+        }}
+      />
+      <div
+        className="brand-wordmark"
+        style={{ fontSize: selected.fontSize }}
+      >
+        <span>Outr</span>
+        <span className="brand-wordmark-cut-e">e</span>
+        <span>acio</span>
+      </div>
     </div>
   );
 }
