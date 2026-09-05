@@ -175,7 +175,8 @@ async function getAdminContacts(req, res) {
 async function updateContactStatus(req, res) {
   try {
     const { id } = req.params;
-    const { status, adminNotes } = req.body;
+    const { status, adminNotes, admin_notes } = req.body || {};
+    const note = adminNotes !== undefined ? adminNotes : admin_notes;
 
     if (!['unread', 'read', 'replied'].includes(status)) {
       return res.status(400).json({ error: 'Status must be "unread", "read", or "replied".' });
@@ -187,7 +188,7 @@ async function updateContactStatus(req, res) {
     for (const msg of local) {
       if (msg.id === id) {
         msg.status = status;
-        if (adminNotes !== undefined) msg.admin_notes = adminNotes;
+        if (note !== undefined) msg.admin_notes = note;
         foundInLocal = true;
         break;
       }
@@ -200,7 +201,7 @@ async function updateContactStatus(req, res) {
     try {
       await supabase
         .from('contact_messages')
-        .update({ status, ...(adminNotes !== undefined ? { admin_notes: adminNotes } : {}) })
+        .update({ status, ...(note !== undefined ? { admin_notes: note } : {}) })
         .eq('id', id);
     } catch (e) {
       // Supabase ignore if not available
