@@ -14,7 +14,7 @@ export default function FaqSection({ onLaunchApp, onOpenContactForm }) {
     },
     {
       q: 'What is the maximum number of emails I can send?',
-      a: 'Gmail allows around 100–200 emails per day for free accounts (and up to 2,000 for Google Workspace). Perfect for personal outreach and founders.'
+      a: 'On the Free plan, Outreacio caps sending at 25 emails per day. Your Gmail account itself supports a higher daily limit, so the Outreacio plan cap is what you\'ll reach first. Upgrade to the Paid Plan to send up to 150 emails per day.'
     },
     {
       q: 'How do I avoid getting flagged as spam?',

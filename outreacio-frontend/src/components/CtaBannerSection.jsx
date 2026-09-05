@@ -15,7 +15,7 @@ export default function CtaBannerSection({ onLaunchApp }) {
           marginBottom: '16px',
           textShadow: '0 3px 16px rgba(0, 0, 0, 0.4)'
         }}>
-          Send 100 emails today for free.<br />
+          Send 25 emails today for free.<br />
           <span style={{ fontStyle: 'italic', fontWeight: 400 }}>No credit card required.</span>
         </h2>
 

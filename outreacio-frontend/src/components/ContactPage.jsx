@@ -47,7 +47,7 @@ export default function ContactPage({ onLaunchApp }) {
             <span style={{ fontStyle: 'italic', fontWeight: 400, color: 'var(--text-secondary)' }}>We're here to help.</span>
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', lineHeight: 1.6 }}>
-            Have a question about email deliverability, Gmail setup, or pricing plans? Our team responds within 2 business hours.
+            Have a question about email deliverability, Gmail setup, or pricing plans? Send us a message and we'll get back to you as soon as possible.
           </p>
         </div>
 

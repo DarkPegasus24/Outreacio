@@ -198,28 +198,29 @@ export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans = {
 
             {/* UPI Payment Instructions Box */}
             <div style={{
-              background: 'linear-gradient(135deg, #f0f9ff, #e0f2fe)',
-              border: '1.5px solid #bae6fd',
+              background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
+              border: '1.5px solid #fcd34d',
               borderRadius: '16px',
               padding: '18px',
               marginBottom: '22px',
               fontSize: '13.5px',
-              color: '#0369a1',
+              color: '#92400e',
               lineHeight: 1.7
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <span style={{ fontWeight: '700', fontSize: '14px' }}>📱 Manual UPI Transfer</span>
+                <span style={{ fontWeight: '700', fontSize: '14px' }}>📋 How Payment Works</span>
                 <span style={{
-                  background: '#0284c7', color: '#fff', fontSize: '11px', fontWeight: '800',
+                  background: '#d97706', color: '#fff', fontSize: '11px', fontWeight: '800',
                   padding: '2px 8px', borderRadius: '99px', textTransform: 'uppercase'
                 }}>
-                  Bridge System
+                  Manual Review
                 </span>
               </div>
-              <div>UPI ID: <strong style={{ userSelect: 'all', background: 'rgba(2, 132, 199, 0.1)', padding: '2px 6px', borderRadius: '6px' }}>outreacio@upi</strong></div>
-              <div>Amount to Pay: <strong>${selectedPlan.priceMonthly} USD (or equivalent INR ₹{selectedPlan.priceINR || Math.round(selectedPlan.priceMonthly * 85)})</strong></div>
-              <div style={{ fontSize: '12px', color: '#075985', marginTop: '6px' }}>
-                ✓ No payment gateway fees &bull; Instant human verification &bull; Receipt emailed upon approval
+              <div style={{ marginBottom: '4px' }}>1. Fill in your name, email, and the amount you paid.</div>
+              <div style={{ marginBottom: '4px' }}>2. Upload a screenshot of your payment confirmation.</div>
+              <div style={{ marginBottom: '8px' }}>3. We will review your submission and send you the UPI payment details directly to your email within a few hours.</div>
+              <div style={{ fontSize: '12px', color: '#78350f', marginTop: '6px', fontWeight: '600' }}>
+                ✓ Amount: ${selectedPlan.priceMonthly} USD &nbsp;/&nbsp; ₹{selectedPlan.priceINR || Math.round(selectedPlan.priceMonthly * 85)} INR &nbsp;&bull;&nbsp; Manual human verification &nbsp;&bull;&nbsp; Receipt emailed upon approval
               </div>
             </div>
 
