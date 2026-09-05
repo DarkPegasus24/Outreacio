@@ -67,7 +67,7 @@ function FaqItem({ q, a }) {
   );
 }
 
-export default function PricingPage({ onUpgrade, csrfToken }) {
+export default function PricingPage({ onUpgrade, csrfToken, onNavigateLogin, onNavigateDashboard, user }) {
   const [plans, setPlans] = useState({});
   const [loading, setLoading] = useState(true);
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
@@ -92,7 +92,19 @@ export default function PricingPage({ onUpgrade, csrfToken }) {
   };
 
   // Keep strictly 2 plans: free and pro (paid)
-  const displayPlans = Object.entries(plans).filter(([key]) => key === 'free' || key === 'pro');
+  const handlePlanClick = (key, plan) => {
+    if (key === 'free') {
+      if (user && onNavigateDashboard) {
+        onNavigateDashboard();
+      } else if (onNavigateLogin) {
+        onNavigateLogin();
+      } else {
+        window.location.href = '/login';
+      }
+      return;
+    }
+    setUpgradeModalOpen(true);
+  };
 
   return (
     <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px 20px 80px', fontFamily: 'inherit' }}>
@@ -197,7 +209,7 @@ export default function PricingPage({ onUpgrade, csrfToken }) {
               currency={currency}
               isPopular={key === 'pro'}
               isCurrentPlan={false}
-              onUpgradeClick={() => setUpgradeModalOpen(true)}
+              onUpgradeClick={handlePlanClick}
             />
           ))}
         </div>
@@ -217,6 +229,7 @@ export default function PricingPage({ onUpgrade, csrfToken }) {
         onClose={() => setUpgradeModalOpen(false)}
         currentPlanId={null}
         plans={plans}
+        initialPlanKey="pro"
         csrfToken={csrfToken || ''}
         onUpgradeSuccess={handleUpgradeSuccess}
       />

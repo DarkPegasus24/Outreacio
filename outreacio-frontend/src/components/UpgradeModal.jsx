@@ -2,9 +2,9 @@ import React, { useState, useEffect, useRef } from 'react';
 import PlanCard from './PlanCard';
 import { submitUpiPaymentProof, upgradePlan } from '../api/planService.js';
 
-export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans, csrfToken, onUpgradeSuccess }) {
-  const [step, setStep] = useState('plans'); // 'plans' | 'payment' | 'pending' | 'free_success'
-  const [selectedPlanKey, setSelectedPlanKey] = useState(null);
+export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans = {}, initialPlanKey = 'pro', csrfToken, onUpgradeSuccess }) {
+  const [step, setStep] = useState('payment'); // 'plans' | 'payment' | 'pending' | 'free_success'
+  const [selectedPlanKey, setSelectedPlanKey] = useState(initialPlanKey || 'pro');
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [payerName, setPayerName] = useState('');
   const [payerEmail, setPayerEmail] = useState('');
@@ -15,12 +15,19 @@ export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans, cs
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
 
-  // Reset when modal opens
+  // Reset & prepare plan when modal opens
   useEffect(() => {
     if (isOpen) {
-      setStep('plans');
-      setSelectedPlanKey(null);
-      setSelectedPlan(null);
+      const planKey = initialPlanKey || 'pro';
+      const plan = plans[planKey] || {
+        name: 'Paid Plan',
+        priceMonthly: 4.99,
+        priceINR: 425,
+      };
+
+      setSelectedPlanKey(planKey);
+      setSelectedPlan(plan);
+      setStep('payment');
       setPayerName('');
       setPayerEmail('');
       setPaymentRef('');
@@ -28,7 +35,7 @@ export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans, cs
       setScreenshotPreview('');
       setError('');
     }
-  }, [isOpen]);
+  }, [isOpen, initialPlanKey, plans]);
 
   if (!isOpen) return null;
 
