@@ -33,7 +33,7 @@ export async function fetchUsage() {
   return authFetch('/api/account/usage');
 }
 
-/** Upgrade plan — also stores payment info as plain text */
+/** Upgrade plan | also stores payment info as plain text */
 export async function upgradePlan(planId, paymentInfo = {}, csrfToken = '') {
   return authFetch('/api/upgrade-plan', {
     method: 'POST',
@@ -50,10 +50,44 @@ export async function fetchPlans() {
       return data.plans;
     }
   } catch (err) {
-    console.warn('Failed to fetch plans from backend API, using static plans config fallback:', err);
+    console.warn('Failed to fetch plans from backend API, using static plans fallback:', err);
   }
-  const { default: staticPlans } = await import('../config/plans.ts');
-  return staticPlans;
+  
+  // Fallback to static plans (works in both dev and production)
+  return {
+    free: {
+      id: 'free',
+      name: 'Free',
+      priceMonthly: 0,
+      priceInr: 0,
+      inboxLimit: 1,
+      sendCapDaily: 25,
+      aiCreditsMonthly: 0,
+      verificationCreditsMonthly: 0,
+      features: {
+        crmIntegration: false,
+        advancedAnalytics: false,
+        teamSeats: 1,
+        priorityQueue: false,
+      },
+    },
+    pro: {
+      id: 'pro',
+      name: 'Paid Plan',
+      priceMonthly: 4.99,
+      priceInr: 425,
+      inboxLimit: null,
+      sendCapDaily: 150,
+      aiCreditsMonthly: 3000,
+      verificationCreditsMonthly: 5000,
+      features: {
+        crmIntegration: true,
+        advancedAnalytics: true,
+        teamSeats: 1,
+        priorityQueue: true,
+      },
+    },
+  };
 }
 
 /** Submit manual UPI payment proof (FormData with screenshot file & UTR) */

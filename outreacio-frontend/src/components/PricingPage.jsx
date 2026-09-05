@@ -1,40 +1,23 @@
-import React, { useEffect, useState } from 'react';
-import PlanCard from './PlanCard';
+import React, { useState, useEffect } from 'react';
 import UpgradeModal from './UpgradeModal';
 import { fetchPlans } from '../api/planService.js';
-import { SkeletonPlansGrid } from './SkeletonLoader';
 
 const FAQ_ITEMS = [
   {
     q: 'Is there a free trial?',
-    a: 'Yes! The Free tier is permanent — no credit card required. Upgrade whenever you need more inbox capacity or volume.'
+    a: 'Yes! The Free tier is permanent | no credit card required. Upgrade whenever you outgrow it.'
   },
   {
-    q: 'What are the limits on the Paid Plan ($4.99 / mo)?',
-    a: 'The Paid Plan provides up to 150 emails per day, unlimited connected Gmail/Workspace inboxes, and priority sending dispatch.'
+    q: 'How does the payment shortcut work?',
+    a: 'Pay via UPI or bank transfer, then enter your transaction reference in the form. Your plan activates instantly after submission and is verified manually by our team.'
   },
   {
-    q: 'Can I pay in Indian Rupees (INR)?',
-    a: 'Yes! We support manual UPI transfer (GPay, PhonePe, Paytm, BHIM) at ₹425/month (equivalent of $4.99 USD) with manual human verification.'
+    q: 'Can I downgrade or cancel anytime?',
+    a: 'You can switch to a lower plan at any time. Your usage resets at the start of each billing cycle.'
   },
-  {
-    q: 'How does the UPI payment verification work?',
-    a: 'Pay via UPI, then enter your 12-digit transaction UTR reference and upload a screenshot proof. Our team verifies and activates your account within 2–4 hours.'
-  },
-  /*
-  // COMMENTED OUT: AI & Verification credits removed as service is focused on dedicated email delivery
-  {
-    q: 'What counts as an "AI credit"?',
-    a: 'Each AI-powered email personalization or smart subject-line generation consumes one credit. Credits reset monthly.'
-  },
-  {
-    q: 'What are "verification credits"?',
-    a: 'Each email address verification check consumes one credit. This helps you maintain a healthy sender reputation by bouncing bad addresses before sending.'
-  },
-  */
   {
     q: 'Do you store my Gmail password?',
-    a: 'Never. Your Gmail App Password is transmitted directly to the email dispatch server in temporary memory only while sending, and is never stored on disk or in any database.'
+    a: 'Never. Your Gmail App Password is transmitted directly to the email dispatch server only for sending and is never stored on disk or in any database.'
   }
 ];
 
@@ -53,7 +36,7 @@ function FaqItem({ q, a }) {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px' }}>
         <span style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-primary)' }}>{q}</span>
         <span style={{
-          fontSize: '20px', color: 'var(--primary)', lineHeight: 1,
+          fontSize: '20px', color: 'var(--accent, #f48d16)', lineHeight: 1,
           transform: open ? 'rotate(45deg)' : 'rotate(0)', transition: 'transform 0.2s ease',
           flexShrink: 0,
         }}>+</span>
@@ -67,18 +50,30 @@ function FaqItem({ q, a }) {
   );
 }
 
-export default function PricingPage({ onUpgrade, csrfToken, onNavigateLogin, onNavigateDashboard, user }) {
-  const [plans, setPlans] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+const CheckIcon = ({ dimmed = false }) => (
+  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: dimmed ? 0.35 : 1 }}>
+    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity={dimmed ? 0.1 : 0.18} />
+    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+const WhiteCheckIcon = () => (
+  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
+    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+export default function PricingPage({ onUpgrade, onGetStarted, csrfToken }) {
   const [currency, setCurrency] = useState('USD'); // 'USD' | 'INR'
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [plans, setPlans] = useState({});
   const [toast, setToast] = useState('');
 
   useEffect(() => {
     fetchPlans()
       .then(setPlans)
-      .catch(err => console.error('Failed to load plans', err))
-      .finally(() => setLoading(false));
+      .catch(err => console.error('Failed to load plans', err));
   }, []);
 
   const showToast = (msg) => {
@@ -91,23 +86,16 @@ export default function PricingPage({ onUpgrade, csrfToken, onNavigateLogin, onN
     if (onUpgrade) onUpgrade(result);
   };
 
-  // Keep strictly 2 plans: free and pro (paid)
-  const handlePlanClick = (key, plan) => {
-    if (key === 'free') {
-      if (user && onNavigateDashboard) {
-        onNavigateDashboard();
-      } else if (onNavigateLogin) {
-        onNavigateLogin();
-      } else {
-        window.location.href = '/login';
-      }
-      return;
+  const handleGetStartedFree = () => {
+    if (onGetStarted) {
+      onGetStarted();
+    } else {
+      window.location.href = '/dashboard';
     }
-    setUpgradeModalOpen(true);
   };
 
   return (
-    <div style={{ maxWidth: '1100px', margin: '0 auto', padding: '48px 20px 80px', fontFamily: 'inherit' }}>
+    <div style={{ maxWidth: '960px', margin: '0 auto', padding: '40px 20px 80px', fontFamily: 'inherit' }}>
       {/* Toast */}
       {toast && (
         <div style={{
@@ -121,103 +109,340 @@ export default function PricingPage({ onUpgrade, csrfToken, onNavigateLogin, onN
         </div>
       )}
 
-      {/* Hero */}
-      <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+      {/* Hero Header */}
+      <div style={{ textAlign: 'center', marginBottom: '36px' }}>
         <div style={{
-          display: 'inline-block', background: 'linear-gradient(90deg, var(--accent, #f48d16), #e07d0a)',
-          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-          fontSize: '13px', fontWeight: '700', letterSpacing: '0.1em', textTransform: 'uppercase',
-          marginBottom: '12px',
+          display: 'inline-block',
+          color: 'var(--accent, #f48d16)',
+          fontSize: '13px',
+          fontWeight: '800',
+          letterSpacing: '0.1em',
+          textTransform: 'uppercase',
+          marginBottom: '10px',
         }}>
-          Simple, Honest Pricing
+          SIMPLE, HONEST PRICING
         </div>
-        <h1 style={{ margin: '0 0 16px', fontSize: 'clamp(28px, 5vw, 48px)', fontWeight: '900', lineHeight: 1.1, color: 'var(--text-primary)' }}>
+        <h1 style={{
+          margin: '0 auto 16px',
+          fontSize: 'clamp(28px, 4.8vw, 44px)',
+          fontWeight: '900',
+          lineHeight: 1.15,
+          color: 'var(--text-primary)',
+          letterSpacing: '-0.025em',
+          maxWidth: '720px'
+        }}>
           Scale your email outreach<br />without scaling your costs
         </h1>
-        <p style={{ margin: 0, fontSize: '17px', color: 'var(--text-secondary)', maxWidth: '520px', marginInline: 'auto', lineHeight: 1.7 }}>
-          Start free. Upgrade when you need higher sending capacity. No surprise charges — ever.
+        <p style={{
+          margin: '0 auto 28px',
+          fontSize: '15.5px',
+          color: 'var(--text-secondary)',
+          maxWidth: '560px',
+          lineHeight: 1.6
+        }}>
+          Start free. Upgrade when you need higher sending capacity. No surprise charges | ever.
         </p>
 
         {/* Currency Switcher Toggle */}
         <div style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '6px',
           background: 'var(--bg-surface)',
           border: '1px solid var(--border)',
-          borderRadius: '999px',
+          borderRadius: '9999px',
           padding: '4px',
-          marginTop: '28px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+          gap: '4px'
         }}>
           <button
             type="button"
             onClick={() => setCurrency('USD')}
             style={{
+              padding: '6px 16px',
+              borderRadius: '9999px',
               border: 'none',
               background: currency === 'USD' ? 'var(--accent, #f48d16)' : 'transparent',
               color: currency === 'USD' ? '#ffffff' : 'var(--text-secondary)',
               fontWeight: '700',
               fontSize: '13px',
-              padding: '6px 16px',
-              borderRadius: '999px',
               cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            🇺🇸 USD ($)
+            <span>🇺🇸 USD ($)</span>
           </button>
+
           <button
             type="button"
             onClick={() => setCurrency('INR')}
             style={{
+              padding: '6px 16px',
+              borderRadius: '9999px',
               border: 'none',
               background: currency === 'INR' ? 'var(--accent, #f48d16)' : 'transparent',
               color: currency === 'INR' ? '#ffffff' : 'var(--text-secondary)',
               fontWeight: '700',
               fontSize: '13px',
-              padding: '6px 16px',
-              borderRadius: '999px',
               cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            🇮🇳 INR (₹)
+            <span>🇮🇳 INR (₹)</span>
           </button>
         </div>
       </div>
 
-      {/* Plan Cards Grid: Exactly 2 plans */}
-      {loading ? (
-        <SkeletonPlansGrid />
-      ) : (
+      {/* 2 Plans Grid (Exact match to screenshot) */}
+      <div style={{
+        display: 'flex',
+        gap: '28px',
+        justifyContent: 'center',
+        alignItems: 'stretch',
+        flexWrap: 'wrap',
+        marginBottom: '72px'
+      }}>
+        {/* Card 1: FREE TIER */}
         <div style={{
+          flex: '1 1 320px',
+          maxWidth: '390px',
+          minWidth: '290px',
+          background: 'var(--bg-white)',
+          border: '1.5px solid var(--border)',
+          borderRadius: '24px',
+          padding: '32px 28px',
           display: 'flex',
-          gap: '28px',
-          flexWrap: 'wrap',
-          justifyContent: 'center',
-          alignItems: 'stretch',
-          marginBottom: '72px',
-          maxWidth: '780px',
-          marginInline: 'auto'
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          boxShadow: 'var(--shadow-card)',
+          transition: 'transform 0.25s ease, box-shadow 0.25s ease'
         }}>
-          {displayPlans.map(([key, plan]) => (
-            <PlanCard
-              key={key}
-              planKey={key}
-              plan={plan}
-              currency={currency}
-              isPopular={key === 'pro'}
-              isCurrentPlan={false}
-              onUpgradeClick={handlePlanClick}
-            />
-          ))}
-        </div>
-      )}
+          <div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '800',
+              letterSpacing: '0.08em',
+              color: 'var(--text-muted)',
+              textTransform: 'uppercase',
+              marginBottom: '8px'
+            }}>
+              FREE TIER
+            </div>
 
-      {/* FAQ */}
-      <div style={{ maxWidth: '720px', marginInline: 'auto' }}>
-        <h2 style={{ textAlign: 'center', fontSize: '26px', fontWeight: '800', marginBottom: '32px' }}>
+            <h2 style={{
+              fontSize: '38px',
+              fontWeight: '900',
+              color: 'var(--text-primary)',
+              margin: '0 0 4px',
+              lineHeight: 1
+            }}>
+              Free
+            </h2>
+
+            <p style={{
+              fontSize: '13.5px',
+              color: 'var(--text-secondary)',
+              margin: '0 0 28px'
+            }}>
+              Free forever · No card needed
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '32px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                <CheckIcon />
+                <span>1 Connected Inbox (Gmail)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                <CheckIcon />
+                <span>25 emails / day</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                <CheckIcon />
+                <span>Smart Multi-Sheet Excel &amp; CSV parser</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                <CheckIcon />
+                <span>Dynamic tags (&#123;&#123;Name&#125;&#125;, &#123;&#123;Company&#125;&#125;)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                <CheckIcon />
+                <span>Real-time delivery tracking &amp; logs</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                <CheckIcon />
+                <span>Zero disk storage (Safe in-memory SMTP)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-muted)' }}>
+                <CheckIcon dimmed />
+                <span style={{ opacity: 0.65 }}>Priority email dispatch &amp; faster rate</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleGetStartedFree}
+            style={{
+              width: '100%',
+              padding: '13px',
+              borderRadius: '12px',
+              border: '1.5px solid var(--border)',
+              background: 'var(--bg-white)',
+              color: 'var(--text-primary)',
+              fontSize: '14px',
+              fontWeight: '700',
+              cursor: 'pointer',
+              boxShadow: 'var(--shadow-subtle)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.borderColor = 'var(--accent, #f48d16)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.borderColor = 'var(--border)';
+            }}
+          >
+            Get Started Free
+          </button>
+        </div>
+
+        {/* Card 2: PAID PLAN (Most Popular) */}
+        <div style={{
+          flex: '1 1 320px',
+          maxWidth: '390px',
+          minWidth: '290px',
+          position: 'relative',
+          background: 'linear-gradient(145deg, #f48d16 0%, #e07d0a 100%)',
+          borderRadius: '24px',
+          padding: '32px 28px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          boxShadow: '0 20px 50px rgba(244, 141, 22, 0.35)',
+          transition: 'transform 0.25s ease, box-shadow 0.25s ease'
+        }}>
+          {/* Top Floating Badge */}
+          <div style={{
+            position: 'absolute',
+            top: '-14px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            background: '#251f19',
+            color: '#ffffff',
+            fontSize: '11px',
+            fontWeight: '800',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+            padding: '5px 18px',
+            borderRadius: '9999px',
+            boxShadow: '0 4px 14px rgba(37, 31, 25, 0.3)',
+            whiteSpace: 'nowrap',
+            border: '1px solid rgba(255, 255, 255, 0.15)'
+          }}>
+            MOST POPULAR
+          </div>
+
+          <div>
+            <div style={{
+              fontSize: '12px',
+              fontWeight: '800',
+              letterSpacing: '0.08em',
+              color: 'rgba(255, 255, 255, 0.85)',
+              textTransform: 'uppercase',
+              marginBottom: '8px'
+            }}>
+              PAID PLAN
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '2px' }}>
+              <span style={{ fontSize: '42px', fontWeight: '900', color: '#ffffff', lineHeight: 1 }}>
+                {currency === 'USD' ? '$4.99' : '₹425'}
+              </span>
+              <span style={{ fontSize: '15px', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)' }}>
+                /mo
+              </span>
+            </div>
+
+            <p style={{
+              fontSize: '12.5px',
+              color: 'rgba(255, 255, 255, 0.82)',
+              margin: '0 0 28px',
+              fontWeight: '500'
+            }}>
+              {currency === 'USD' ? '~ ₹425 INR / month' : '~ $4.99 USD / month'}
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '32px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                <WhiteCheckIcon />
+                <span>Unlimited Connected Inboxes</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                <WhiteCheckIcon />
+                <span>150 emails / day</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                <WhiteCheckIcon />
+                <span>Smart Multi-Sheet Excel &amp; CSV parser</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                <WhiteCheckIcon />
+                <span>Dynamic tags (&#123;&#123;Name&#125;&#125;, &#123;&#123;Company&#125;&#125;)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                <WhiteCheckIcon />
+                <span>Real-time delivery tracking &amp; logs</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                <WhiteCheckIcon />
+                <span>Zero disk storage (Safe in-memory SMTP)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                <WhiteCheckIcon />
+                <span>Priority email dispatch &amp; faster rate</span>
+              </div>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setUpgradeModalOpen(true)}
+            style={{
+              width: '100%',
+              padding: '13px',
+              borderRadius: '12px',
+              border: 'none',
+              background: '#ffffff',
+              color: '#251f19',
+              fontSize: '14px',
+              fontWeight: '800',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
+              transition: 'all 0.2s ease'
+            }}
+            onMouseEnter={e => {
+              e.currentTarget.style.transform = 'translateY(-2px)';
+              e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.18)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.transform = 'translateY(0)';
+              e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.12)';
+            }}
+          >
+            Upgrade to Paid Plan
+          </button>
+        </div>
+      </div>
+
+      {/* FAQ Section */}
+      <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+        <h2 style={{ textAlign: 'center', fontSize: '24px', fontWeight: '800', marginBottom: '28px', color: 'var(--text-primary)' }}>
           Frequently Asked Questions
         </h2>
         {FAQ_ITEMS.map(item => <FaqItem key={item.q} {...item} />)}
@@ -229,16 +454,9 @@ export default function PricingPage({ onUpgrade, csrfToken, onNavigateLogin, onN
         onClose={() => setUpgradeModalOpen(false)}
         currentPlanId={null}
         plans={plans}
-        initialPlanKey="pro"
         csrfToken={csrfToken || ''}
         onUpgradeSuccess={handleUpgradeSuccess}
       />
-
-      <style>{`
-        @keyframes slideUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
-        @keyframes fadeIn  { from { opacity:0; } to { opacity:1; } }
-        @keyframes spin    { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
-      `}</style>
     </div>
   );
 }

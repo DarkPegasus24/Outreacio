@@ -3,8 +3,9 @@
     "id": "free",
     "name": "Free",
     "priceMonthly": 0,
+    "priceInr": 0,
     "inboxLimit": 1,
-    "sendCapDaily": 100,
+    "sendCapDaily": 25,
     "aiCreditsMonthly": 0,
     "verificationCreditsMonthly": 0,
     "features": {
@@ -31,10 +32,11 @@
   },
   "pro": {
     "id": "pro",
-    "name": "Pro",
-    "priceMonthly": 44,
+    "name": "Paid Plan",
+    "priceMonthly": 4.99,
+    "priceInr": 425,
     "inboxLimit": null,
-    "sendCapDaily": null,
+    "sendCapDaily": 150,
     "aiCreditsMonthly": 3000,
     "verificationCreditsMonthly": 5000,
     "features": {

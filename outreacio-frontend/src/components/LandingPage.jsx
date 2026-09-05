@@ -14,9 +14,9 @@ import { SkeletonPlansGrid } from './SkeletonLoader';
 export default function LandingPage({ onLaunchApp, onNavigateContact }) {
   const [activeKpi, setActiveKpi] = useState(0);
   const [activeStep, setActiveStep] = useState(0);
+  const [currency, setCurrency] = useState('USD'); // 'USD' | 'INR'
   const [plans, setPlans] = useState({});
   const [plansLoading, setPlansLoading] = useState(true);
-  const [currency, setCurrency] = useState('USD'); // 'USD' | 'INR'
 
   useEffect(() => {
     fetchPlans()
@@ -563,100 +563,368 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
         </div>
       </section>
 
-      {/* 4. Pricing (Dynamic Plan Grid: Free Tier & $4.99 Paid Plan) */}
-      <section id="pricing" style={{ padding: '60px 20px 40px', textAlign: 'center', maxWidth: '1100px', margin: '0 auto' }}>
-        <div style={{ fontSize: '13px', fontWeight: '700', color: 'var(--accent)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
-          Pricing
+      {/* 4. Pricing (Exact 2-Card Layout matching Pricing Page & User Screenshot) */}
+      <section id="pricing" style={{ padding: '60px 20px 40px', textAlign: 'center', maxWidth: '1000px', margin: '0 auto' }}>
+        <div style={{ fontSize: '13px', fontWeight: '800', color: 'var(--accent, #f48d16)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '10px' }}>
+          SIMPLE, HONEST PRICING
         </div>
         <h2 style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(2.2rem, 4.5vw, 3.2rem)',
+          fontSize: 'clamp(2.2rem, 4.8vw, 3.2rem)',
           lineHeight: 1.15,
           fontWeight: 700,
-          marginBottom: '12px'
+          marginBottom: '16px',
+          color: 'var(--text-primary)',
+          letterSpacing: '-0.025em',
+          maxWidth: '720px',
+          margin: '0 auto 16px'
         }}>
-          Simple &amp; Transparent
+          Scale your email outreach<br />without scaling your costs
         </h2>
-        <p style={{ fontSize: '16px', color: 'var(--text-secondary)', marginBottom: '24px', maxWidth: '520px', margin: '0 auto 24px' }}>
-          Start free. Upgrade whenever you're ready. No hidden fees or surprise charges — ever.
+        <p style={{ fontSize: '15.5px', color: 'var(--text-secondary)', marginBottom: '28px', maxWidth: '560px', margin: '0 auto 28px', lineHeight: 1.6 }}>
+          Start free. Upgrade when you need higher sending capacity. No surprise charges | ever.
         </p>
 
         {/* Currency Switcher Toggle */}
         <div style={{
           display: 'inline-flex',
           alignItems: 'center',
-          gap: '6px',
           background: 'var(--bg-surface)',
           border: '1px solid var(--border)',
-          borderRadius: '999px',
+          borderRadius: '9999px',
           padding: '4px',
-          marginBottom: '36px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+          gap: '4px',
+          marginBottom: '44px'
         }}>
           <button
             type="button"
             onClick={() => setCurrency('USD')}
             style={{
+              padding: '6px 16px',
+              borderRadius: '9999px',
               border: 'none',
               background: currency === 'USD' ? 'var(--accent, #f48d16)' : 'transparent',
               color: currency === 'USD' ? '#ffffff' : 'var(--text-secondary)',
               fontWeight: '700',
               fontSize: '13px',
-              padding: '6px 16px',
-              borderRadius: '999px',
               cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            🇺🇸 USD ($)
+            <span>🇺🇸 USD ($)</span>
           </button>
+
           <button
             type="button"
             onClick={() => setCurrency('INR')}
             style={{
+              padding: '6px 16px',
+              borderRadius: '9999px',
               border: 'none',
               background: currency === 'INR' ? 'var(--accent, #f48d16)' : 'transparent',
               color: currency === 'INR' ? '#ffffff' : 'var(--text-secondary)',
               fontWeight: '700',
               fontSize: '13px',
-              padding: '6px 16px',
-              borderRadius: '999px',
               cursor: 'pointer',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
             }}
           >
-            🇮🇳 INR (₹)
+            <span>🇮🇳 INR (₹)</span>
           </button>
         </div>
 
-        {plansLoading ? (
-          <SkeletonPlansGrid />
-        ) : (
+        {/* 2 Plans Grid */}
+        <div style={{
+          display: 'flex',
+          gap: '28px',
+          justifyContent: 'center',
+          alignItems: 'stretch',
+          flexWrap: 'wrap',
+          marginBottom: '32px'
+        }}>
+          {/* Card 1: FREE TIER */}
           <div style={{
+            flex: '1 1 320px',
+            maxWidth: '390px',
+            minWidth: '290px',
+            background: 'var(--bg-white)',
+            border: '1.5px solid var(--border)',
+            borderRadius: '24px',
+            padding: '32px 28px',
             display: 'flex',
-            gap: '28px',
-            flexWrap: 'wrap',
-            justifyContent: 'center',
-            alignItems: 'stretch',
-            marginBottom: '32px',
-            maxWidth: '780px',
-            marginInline: 'auto'
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            boxShadow: 'var(--shadow-card)',
+            textAlign: 'left',
+            transition: 'transform 0.25s ease, box-shadow 0.25s ease'
           }}>
-            {Object.entries(plans)
-              .filter(([key]) => key === 'free' || key === 'pro')
-              .map(([key, plan]) => (
-                <PlanCard
-                  key={key}
-                  planKey={key}
-                  plan={plan}
-                  currency={currency}
-                  isPopular={key === 'pro'}
-                  isCurrentPlan={false}
-                  onUpgradeClick={() => onLaunchApp()}
-                />
-            ))}
+            <div>
+              <div style={{
+                fontSize: '12px',
+                fontWeight: '800',
+                letterSpacing: '0.08em',
+                color: 'var(--text-muted)',
+                textTransform: 'uppercase',
+                marginBottom: '8px'
+              }}>
+                FREE TIER
+              </div>
+
+              <h3 style={{
+                fontSize: '38px',
+                fontWeight: '900',
+                color: 'var(--text-primary)',
+                margin: '0 0 4px',
+                lineHeight: 1
+              }}>
+                Free
+              </h3>
+
+              <p style={{
+                fontSize: '13.5px',
+                color: 'var(--text-secondary)',
+                margin: '0 0 28px'
+              }}>
+                Free forever · No card needed
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>1 Connected Inbox (Gmail)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>25 emails / day</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Smart Multi-Sheet Excel &amp; CSV parser</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Dynamic tags (&#123;&#123;Name&#125;&#125;, &#123;&#123;Company&#125;&#125;)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Real-time delivery tracking &amp; logs</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Zero disk storage (Safe in-memory SMTP)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-muted)' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.35 }}>
+                    <circle cx="8" cy="8" r="8" fill="var(--text-muted)" opacity="0.1" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--text-muted)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span style={{ opacity: 0.65 }}>Priority email dispatch &amp; faster rate</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={onLaunchApp}
+              style={{
+                width: '100%',
+                padding: '13px',
+                borderRadius: '12px',
+                border: '1.5px solid var(--border)',
+                background: 'var(--bg-white)',
+                color: 'var(--text-primary)',
+                fontSize: '14px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                boxShadow: 'var(--shadow-subtle)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.borderColor = 'var(--accent, #f48d16)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.borderColor = 'var(--border)';
+              }}
+            >
+              Get Started Free
+            </button>
           </div>
-        )}
+
+          {/* Card 2: PAID PLAN (Most Popular) */}
+          <div style={{
+            flex: '1 1 320px',
+            maxWidth: '390px',
+            minWidth: '290px',
+            position: 'relative',
+            background: 'linear-gradient(145deg, #f48d16 0%, #e07d0a 100%)',
+            borderRadius: '24px',
+            padding: '32px 28px',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            boxShadow: '0 20px 50px rgba(244, 141, 22, 0.35)',
+            textAlign: 'left',
+            transition: 'transform 0.25s ease, box-shadow 0.25s ease'
+          }}>
+            {/* Top Floating Badge */}
+            <div style={{
+              position: 'absolute',
+              top: '-14px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              background: '#251f19',
+              color: '#ffffff',
+              fontSize: '11px',
+              fontWeight: '800',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              padding: '5px 18px',
+              borderRadius: '9999px',
+              boxShadow: '0 4px 14px rgba(37, 31, 25, 0.3)',
+              whiteSpace: 'nowrap',
+              border: '1px solid rgba(255, 255, 255, 0.15)'
+            }}>
+              MOST POPULAR
+            </div>
+
+            <div>
+              <div style={{
+                fontSize: '12px',
+                fontWeight: '800',
+                letterSpacing: '0.08em',
+                color: 'rgba(255, 255, 255, 0.85)',
+                textTransform: 'uppercase',
+                marginBottom: '8px'
+              }}>
+                PAID PLAN
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '2px' }}>
+                <span style={{ fontSize: '42px', fontWeight: '900', color: '#ffffff', lineHeight: 1 }}>
+                  {currency === 'USD' ? '$4.99' : '₹425'}
+                </span>
+                <span style={{ fontSize: '15px', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)' }}>
+                  /mo
+                </span>
+              </div>
+
+              <p style={{
+                fontSize: '12.5px',
+                color: 'rgba(255, 255, 255, 0.82)',
+                margin: '0 0 28px',
+                fontWeight: '500'
+              }}>
+                {currency === 'USD' ? '~ ₹425 INR / month' : '~ $4.99 USD / month'}
+              </p>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '32px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Unlimited Connected Inboxes</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>150 emails / day</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Smart Multi-Sheet Excel &amp; CSV parser</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Dynamic tags (&#123;&#123;Name&#125;&#125;, &#123;&#123;Company&#125;&#125;)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Real-time delivery tracking &amp; logs</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Zero disk storage (Safe in-memory SMTP)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Priority email dispatch &amp; faster rate</span>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={onLaunchApp}
+              style={{
+                width: '100%',
+                padding: '13px',
+                borderRadius: '12px',
+                border: 'none',
+                background: '#ffffff',
+                color: '#251f19',
+                fontSize: '14px',
+                fontWeight: '800',
+                cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(0,0,0,0.12)',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={e => {
+                e.currentTarget.style.transform = 'translateY(-2px)';
+                e.currentTarget.style.boxShadow = '0 6px 18px rgba(0,0,0,0.18)';
+              }}
+              onMouseLeave={e => {
+                e.currentTarget.style.transform = 'translateY(0)';
+                e.currentTarget.style.boxShadow = '0 4px 14px rgba(0,0,0,0.12)';
+              }}
+            >
+              Upgrade to Paid Plan
+            </button>
+          </div>
+        </div>
       </section>
 
       {/* 5. Reusable FAQ Section */}

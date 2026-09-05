@@ -190,7 +190,7 @@ export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans = {
               ← Back to plans
             </button>
             <h2 style={{ margin: '0 0 4px', fontSize: '22px', fontWeight: '800' }}>
-              Pay via UPI — {selectedPlan.name} Plan
+              Pay via UPI | {selectedPlan.name} Plan
             </h2>
             <p style={{ margin: '0 0 20px', color: 'var(--text-secondary)', fontSize: '14px', lineHeight: 1.6 }}>
               Complete the payment using any UPI app (GPay, PhonePe, Paytm), then submit your UTR reference and screenshot below for manual verification.
