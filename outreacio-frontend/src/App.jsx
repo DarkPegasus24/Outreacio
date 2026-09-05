@@ -512,7 +512,7 @@ export default function App() {
   };
 
   return (
-    <ThemeProvider>
+    <ThemeProvider user={user}>
       <div className="app-container outreacio-app">
         <Header 
           currentView={currentView}
