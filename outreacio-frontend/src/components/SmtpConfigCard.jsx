@@ -130,7 +130,7 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
             className="btn btn-secondary btn-sm"
             style={{
               borderColor: isVerified ? 'var(--success)' : undefined,
-              color: isVerified ? '#128a4d' : undefined,
+              color: isVerified ? 'var(--success)' : undefined,
               fontWeight: '600',
               padding: '8px 16px'
             }}
@@ -175,7 +175,7 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
 
       {/* Gmail Setup Instructions Banner */}
       <div style={{
-        background: '#f8f7f3',
+        background: 'var(--bg-surface)',
         border: '1px solid var(--border)',
         borderRadius: '14px',
         padding: '16px 20px',
@@ -282,9 +282,9 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
           marginBottom: '20px',
           padding: '12px 16px',
           borderRadius: '10px',
-          background: testResult.success ? 'rgba(31, 190, 109, 0.08)' : 'rgba(239, 68, 68, 0.08)',
-          border: `1px solid ${testResult.success ? 'rgba(31, 190, 109, 0.25)' : 'rgba(239, 68, 68, 0.25)'}`,
-          color: testResult.success ? '#128a4d' : 'var(--error)',
+          background: testResult.success ? 'var(--success-bg)' : 'var(--error-bg)',
+          border: `1px solid ${testResult.success ? 'var(--success-border)' : 'var(--error-border)'}`,
+          color: testResult.success ? 'var(--success)' : 'var(--error)',
           fontSize: '13.5px',
           display: 'flex',
           alignItems: 'center',
@@ -311,9 +311,9 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
           alignItems: 'center',
           gap: '8px',
           fontSize: '12.5px',
-          color: 'var(--text-muted)'
+          color: 'var(--text-secondary)'
         }}>
-          <ShieldCheck size={16} color="#128a4d" />
+          <ShieldCheck size={16} color="var(--success)" />
           <span>Password not saved on our servers. Stored in temporary memory only.</span>
         </div>
 

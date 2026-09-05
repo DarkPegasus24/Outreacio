@@ -311,7 +311,7 @@ export default function CampaignHistory({ csrfToken, onSwitchToNewCampaign }) {
                       {/* Sent / Total Count */}
                       <td style={{ padding: '12px 14px', textAlign: 'center', whiteSpace: 'nowrap' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontWeight: '700', color: item.sent_count > 0 ? '#128a4d' : 'var(--text-primary)' }}>
+                          <span style={{ fontWeight: '700', color: item.sent_count > 0 ? 'var(--success)' : 'var(--text-primary)' }}>
                             {item.sent_count}
                           </span>
                           <span style={{ color: 'var(--text-muted)' }}>/</span>
@@ -335,8 +335,9 @@ export default function CampaignHistory({ csrfToken, onSwitchToNewCampaign }) {
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: '4px',
-                            background: '#e5e4dc',
-                            color: '#5c554e',
+                            background: 'var(--bg-surface-hover)',
+                            color: 'var(--text-secondary)',
+                            border: '1px solid var(--border)',
                             padding: '3px 8px',
                             borderRadius: '9999px',
                             fontSize: '11.5px',

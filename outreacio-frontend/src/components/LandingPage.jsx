@@ -236,13 +236,14 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
                       </div>
 
                       <div style={{
-                        background: '#ffffff',
+                        background: 'var(--bg-white)',
                         borderRadius: '8px',
                         padding: '10px 14px',
                         fontSize: '12.5px',
                         fontWeight: '600',
-                        color: '#251f19',
-                        boxShadow: '0 6px 20px rgba(0, 0, 0, 0.08)',
+                        color: 'var(--text-primary)',
+                        boxShadow: 'var(--shadow-card)',
+                        border: '1px solid var(--border)',
                         lineHeight: 1.3
                       }}>
                         {kpi.pill.text}
@@ -447,8 +448,9 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
                     width: '32px',
                     height: '32px',
                     borderRadius: '8px',
-                    background: isActive ? '#f48d16' : '#eeede7',
-                    color: isActive ? '#ffffff' : '#251f19',
+                    background: isActive ? '#f48d16' : 'var(--bg-surface)',
+                    color: isActive ? '#ffffff' : 'var(--text-primary)',
+                    border: `1px solid ${isActive ? '#f48d16' : 'var(--border)'}`,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -466,7 +468,8 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
                       <h4 style={{
                         fontSize: '1.1rem',
                         fontWeight: '700',
-                        color: isActive ? 'var(--text-primary)' : 'rgba(37, 31, 25, 0.75)'
+                        color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)',
+                        transition: 'color 0.2s'
                       }}>
                         {step.title}
                       </h4>
@@ -960,7 +963,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
               width: '40px',
               height: '40px',
               borderRadius: '10px',
-              background: '#f8f7f4',
+              background: 'var(--bg-surface)',
               border: '1px solid var(--border)',
               display: 'flex',
               alignItems: 'center',
@@ -989,8 +992,9 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
             <div style={{
               fontSize: '11px',
               fontWeight: '700',
-              background: 'rgba(31, 190, 109, 0.12)',
-              color: '#128a4d',
+              background: 'var(--success-bg)',
+              color: 'var(--success)',
+              border: '1px solid var(--success-border)',
               padding: '4px 10px',
               borderRadius: '9999px',
               flexShrink: 0

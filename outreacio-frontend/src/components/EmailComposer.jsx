@@ -122,16 +122,16 @@ export default function EmailComposer({
         </div>
 
         {/* View Switchers */}
-        <div className="composer-view-tabs" style={{ display: 'flex', gap: '4px', background: '#f8f7f3', padding: '4px', borderRadius: '10px', border: '1px solid var(--border)' }}>
+        <div className="composer-view-tabs" style={{ display: 'flex', gap: '4px', background: 'var(--bg-surface)', padding: '4px', borderRadius: '10px', border: '1px solid var(--border)' }}>
           <button
             type="button"
             onClick={() => setActiveView('split')}
             className="btn btn-sm"
             style={{
-              background: activeView === 'split' ? '#ffffff' : 'transparent',
+              background: activeView === 'split' ? 'var(--bg-white)' : 'transparent',
               color: activeView === 'split' ? 'var(--text-primary)' : 'var(--text-secondary)',
               fontWeight: activeView === 'split' ? '700' : '500',
-              boxShadow: activeView === 'split' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
+              boxShadow: activeView === 'split' ? 'var(--shadow-subtle)' : 'none',
               border: activeView === 'split' ? '1px solid var(--border)' : '1px solid transparent',
               borderRadius: '7px'
             }}
@@ -144,10 +144,10 @@ export default function EmailComposer({
             onClick={() => setActiveView('editor')}
             className="btn btn-sm"
             style={{
-              background: activeView === 'editor' ? '#ffffff' : 'transparent',
+              background: activeView === 'editor' ? 'var(--bg-white)' : 'transparent',
               color: activeView === 'editor' ? 'var(--text-primary)' : 'var(--text-secondary)',
               fontWeight: activeView === 'editor' ? '700' : '500',
-              boxShadow: activeView === 'editor' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
+              boxShadow: activeView === 'editor' ? 'var(--shadow-subtle)' : 'none',
               border: activeView === 'editor' ? '1px solid var(--border)' : '1px solid transparent',
               borderRadius: '7px'
             }}
@@ -160,10 +160,10 @@ export default function EmailComposer({
             onClick={() => setActiveView('html')}
             className="btn btn-sm"
             style={{
-              background: activeView === 'html' ? '#ffffff' : 'transparent',
+              background: activeView === 'html' ? 'var(--bg-white)' : 'transparent',
               color: activeView === 'html' ? 'var(--text-primary)' : 'var(--text-secondary)',
               fontWeight: activeView === 'html' ? '700' : '500',
-              boxShadow: activeView === 'html' ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
+              boxShadow: activeView === 'html' ? 'var(--shadow-subtle)' : 'none',
               border: activeView === 'html' ? '1px solid var(--border)' : '1px solid transparent',
               borderRadius: '7px'
             }}
@@ -220,7 +220,7 @@ export default function EmailComposer({
           <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', background: 'var(--bg-surface)' }}>
             {/* Formatting Toolbar */}
             <div className="composer-toolbar" style={{
-              background: '#f8f7f3',
+              background: 'var(--bg-surface)',
               borderBottom: '1px solid var(--border)',
               padding: '8px 10px',
               display: 'flex',
@@ -347,7 +347,7 @@ export default function EmailComposer({
               border: '1px solid var(--border)',
               borderRadius: '8px',
               overflow: 'hidden',
-              background: '#fdfdfc',
+              background: 'var(--bg-white)',
               flexGrow: 1,
               maxWidth: previewDevice === 'mobile' ? '320px' : '100%',
               margin: '0 auto',
@@ -363,7 +363,7 @@ export default function EmailComposer({
               </div>
 
               <div 
-                style={{ padding: '16px', fontSize: '13.5px', lineHeight: 1.6 }}
+                style={{ padding: '16px', fontSize: '13.5px', lineHeight: 1.6, color: 'var(--text-primary)' }}
                 dangerouslySetInnerHTML={{ __html: preview.html }}
               />
             </div>
@@ -375,7 +375,7 @@ export default function EmailComposer({
       <div style={{
         marginTop: '20px',
         padding: '16px 20px',
-        background: '#f8f7f3',
+        background: 'var(--bg-surface)',
         borderRadius: '12px',
         border: '1px solid var(--border)'
       }}>

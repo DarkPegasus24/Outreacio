@@ -35,7 +35,7 @@ export default function WizardStepper({ currentStep, onStepClick, isStepComplete
         <div style={{
           width: '100%',
           height: '6px',
-          background: '#eeede7',
+          background: 'var(--bg-surface)',
           borderRadius: '9999px',
           overflow: 'hidden'
         }}>
@@ -58,7 +58,7 @@ export default function WizardStepper({ currentStep, onStepClick, isStepComplete
           left: '60px',
           right: '60px',
           height: '3px',
-          background: '#e6e4dc',
+          background: 'var(--border-strong)',
           zIndex: 1,
           borderRadius: '2px'
         }}>
@@ -111,14 +111,14 @@ export default function WizardStepper({ currentStep, onStepClick, isStepComplete
                   justifyContent: 'center',
                   fontSize: '14px',
                   fontWeight: '700',
-                  background: isCurrent ? '#f48d16' : isCompleted ? '#251f19' : '#ffffff',
-                  color: isCurrent || isCompleted ? '#ffffff' : '#8c827a',
+                  background: isCurrent ? '#f48d16' : isCompleted ? 'var(--text-primary)' : 'var(--bg-surface)',
+                  color: isCurrent ? '#ffffff' : isCompleted ? 'var(--bg-primary)' : 'var(--text-muted)',
                   border: isCurrent
                     ? '4px solid rgba(244, 141, 22, 0.25)'
                     : isCompleted
-                    ? '3px solid #251f19'
-                    : '2px solid #dedcd3',
-                  boxShadow: isCurrent ? '0 4px 14px rgba(244, 141, 22, 0.3)' : '0 2px 6px rgba(0,0,0,0.03)',
+                    ? '3px solid var(--text-primary)'
+                    : '2px solid var(--border-strong)',
+                  boxShadow: isCurrent ? '0 4px 14px rgba(244, 141, 22, 0.3)' : 'var(--shadow-subtle)',
                   transition: 'all 0.25s ease',
                   marginBottom: '8px'
                 }}>
@@ -129,7 +129,7 @@ export default function WizardStepper({ currentStep, onStepClick, isStepComplete
                 <span style={{
                   fontSize: '13.5px',
                   fontWeight: isCurrent ? '700' : '500',
-                  color: isCurrent ? '#251f19' : isCompleted ? '#251f19' : '#8c827a',
+                  color: isCurrent ? 'var(--accent)' : isCompleted ? 'var(--text-primary)' : 'var(--text-muted)',
                   transition: 'color 0.2s'
                 }}>
                   {step.label}

@@ -143,7 +143,7 @@ export default function CampaignMonitor({
 
       {/* Review Summary Box */}
       <div className="review-summary-grid" style={{
-        background: '#f8f7f3',
+        background: 'var(--bg-surface)',
         border: '1px solid var(--border)',
         borderRadius: '12px',
         padding: '16px 20px',
@@ -449,12 +449,12 @@ export default function CampaignMonitor({
               <div style={{ fontSize: '1.6rem', fontWeight: '700', color: 'var(--text-primary)' }}>{jobState.total}</div>
             </div>
             <div style={{ background: 'var(--success-bg)', padding: '14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--success-border)', textAlign: 'center' }}>
-              <div style={{ fontSize: '12px', color: '#128a4d', textTransform: 'uppercase', fontWeight: '600' }}>Sent (Delivered)</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: '700', color: '#128a4d' }}>{jobState.sent}</div>
+              <div style={{ fontSize: '12px', color: 'var(--success)', textTransform: 'uppercase', fontWeight: '600' }}>Sent (Delivered)</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: '700', color: 'var(--success)' }}>{jobState.sent}</div>
             </div>
             <div style={{ background: 'var(--error-bg)', padding: '14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--error-border)', textAlign: 'center' }}>
-              <div style={{ fontSize: '12px', color: '#c42b2a', textTransform: 'uppercase', fontWeight: '600' }}>Failed / Errors</div>
-              <div style={{ fontSize: '1.6rem', fontWeight: '700', color: '#c42b2a' }}>{jobState.failed}</div>
+              <div style={{ fontSize: '12px', color: 'var(--error)', textTransform: 'uppercase', fontWeight: '600' }}>Failed / Errors</div>
+              <div style={{ fontSize: '1.6rem', fontWeight: '700', color: 'var(--error)' }}>{jobState.failed}</div>
             </div>
             <div style={{ background: 'var(--bg-surface)', padding: '14px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', textAlign: 'center' }}>
               <div style={{ fontSize: '12px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Remaining</div>
@@ -508,7 +508,7 @@ export default function CampaignMonitor({
                     fontSize: '12px',
                     padding: '3px 8px',
                     background: logFilter === 'success' ? 'var(--success-bg)' : 'var(--bg-surface)',
-                    color: logFilter === 'success' ? '#128a4d' : 'var(--text-secondary)'
+                    color: logFilter === 'success' ? 'var(--success)' : 'var(--text-secondary)'
                   }}
                 >
                   Success
@@ -521,7 +521,7 @@ export default function CampaignMonitor({
                     fontSize: '12px',
                     padding: '3px 8px',
                     background: logFilter === 'failed' ? 'var(--error-bg)' : 'var(--bg-surface)',
-                    color: logFilter === 'failed' ? '#c42b2a' : 'var(--text-secondary)'
+                    color: logFilter === 'failed' ? 'var(--error)' : 'var(--text-secondary)'
                   }}
                 >
                   Failed
@@ -592,7 +592,7 @@ export default function CampaignMonitor({
         <div style={{
           position: 'fixed',
           inset: 0,
-          background: 'rgba(37, 31, 25, 0.6)',
+          background: 'rgba(0, 0, 0, 0.65)',
           backdropFilter: 'blur(4px)',
           display: 'flex',
           alignItems: 'center',

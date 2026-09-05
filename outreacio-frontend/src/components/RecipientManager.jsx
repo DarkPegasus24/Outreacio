@@ -243,8 +243,8 @@ export default function RecipientManager({ recipients, onUpdateRecipients, onBac
             marginTop: '14px',
             padding: '12px 16px',
             borderRadius: '10px',
-            background: 'rgba(226, 75, 74, 0.08)',
-            border: '1px solid rgba(226, 75, 74, 0.25)',
+            background: 'var(--error-bg)',
+            border: '1px solid var(--error-border)',
             color: 'var(--error)',
             fontSize: '13.5px',
             display: 'flex',
@@ -337,7 +337,7 @@ export default function RecipientManager({ recipients, onUpdateRecipients, onBac
                       }}
                     >
                       <td style={{ padding: '8px 12px', color: 'var(--text-muted)' }}>{i + 1}</td>
-                      <td style={{ padding: '8px 12px', fontWeight: '500' }}>{item.companyName || <em style={{ color: 'var(--text-muted)' }}>Unnamed</em>}</td>
+                      <td style={{ padding: '8px 12px', fontWeight: '500', color: 'var(--text-primary)' }}>{item.companyName || <em style={{ color: 'var(--text-muted)' }}>Unnamed</em>}</td>
                       <td style={{ padding: '8px 12px', fontFamily: 'var(--font-mono)', fontSize: '13px', color: 'var(--text-primary)' }}>
                         {item.email}
                       </td>

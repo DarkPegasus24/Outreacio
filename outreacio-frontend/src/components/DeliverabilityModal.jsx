@@ -8,7 +8,7 @@ export default function DeliverabilityModal({ isOpen, onClose }) {
     <div style={{
       position: 'fixed',
       inset: 0,
-      background: 'rgba(37, 31, 25, 0.6)',
+      background: 'rgba(0, 0, 0, 0.65)',
       backdropFilter: 'blur(5px)',
       display: 'flex',
       alignItems: 'center',
@@ -25,7 +25,7 @@ export default function DeliverabilityModal({ isOpen, onClose }) {
         background: 'var(--bg-white)',
         border: '1px solid var(--border)',
         borderRadius: 'var(--radius-lg)',
-        boxShadow: '0 25px 50px -12px rgba(37, 31, 25, 0.25)',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.4)',
         padding: '24px'
       }}>
         <div style={{
@@ -63,8 +63,8 @@ export default function DeliverabilityModal({ isOpen, onClose }) {
 
         {/* Notice */}
         <div style={{
-          background: 'rgba(244, 141, 22, 0.08)',
-          border: '1px solid rgba(244, 141, 22, 0.25)',
+          background: 'var(--warning-bg)',
+          border: '1px solid var(--warning-border)',
           borderRadius: 'var(--radius-md)',
           padding: '14px 16px',
           marginBottom: '20px',
@@ -72,9 +72,9 @@ export default function DeliverabilityModal({ isOpen, onClose }) {
           gap: '12px',
           alignItems: 'flex-start'
         }}>
-          <AlertTriangle size={20} color="#b45309" style={{ flexShrink: 0, marginTop: '2px' }} />
-          <div style={{ fontSize: '13.5px', color: '#78350f' }}>
-            <strong style={{ display: 'block', marginBottom: '3px' }}>
+          <AlertTriangle size={20} color="var(--warning)" style={{ flexShrink: 0, marginTop: '2px' }} />
+          <div style={{ fontSize: '13.5px', color: 'var(--text-primary)' }}>
+            <strong style={{ display: 'block', marginBottom: '3px', color: 'var(--warning)' }}>
               Gmail Sending Tip:
             </strong>
             Always use safe pacing (2–3 seconds per email) to keep your Gmail account in good standing and avoid rate limit pauses.

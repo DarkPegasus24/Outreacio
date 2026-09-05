@@ -130,6 +130,21 @@ export default function Header({
           </button>
         </nav>
 
+        {/* Quick Theme Toggle Button */}
+        <button
+          type="button"
+          onClick={toggleTheme}
+          className="theme-toggle-btn"
+          title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
+          aria-label="Toggle theme"
+        >
+          {theme === 'dark' ? (
+            <Sun size={17} className="theme-toggle-icon" color="var(--accent)" />
+          ) : (
+            <Moon size={17} className="theme-toggle-icon" color="var(--text-primary)" />
+          )}
+        </button>
+
         {/* User Authenticated Profile Dropdown (Parley Dark Aesthetic) */}
         {user ? (
           <div ref={dropdownRef} style={{ position: 'relative' }}>
