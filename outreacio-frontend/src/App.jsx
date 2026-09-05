@@ -22,7 +22,7 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
 
-  // Check authenticated Google session via Supabase on app load
+  // Check authenticated Google session via Supabase on app load (do not hijack current page)
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
@@ -34,8 +34,8 @@ export default function App() {
           picture: u.user_metadata?.avatar_url || u.user_metadata?.picture || ''
         });
 
-        // If landing with OAuth tokens, immediately switch to dashboard and clean hash
-        if (window.location.hash.includes('access_token') || window.location.hash === '#') {
+        // Only redirect to dashboard if specifically returning from an OAuth callback with token hash
+        if (window.location.hash.includes('access_token')) {
           setCurrentView('dashboard');
           window.history.replaceState({ view: 'dashboard' }, '', '/dashboard');
         }
@@ -55,8 +55,8 @@ export default function App() {
           picture: u.user_metadata?.avatar_url || u.user_metadata?.picture || ''
         });
 
-        // Direct user to Dashboard on sign-in or OAuth callback, and remove all hash fragments
-        if (event === 'SIGNED_IN' || window.location.hash.includes('access_token') || window.location.hash === '#') {
+        // Only switch to dashboard if explicitly returning from OAuth token hash
+        if (window.location.hash.includes('access_token')) {
           setCurrentView('dashboard');
           window.history.replaceState({ view: 'dashboard' }, '', '/dashboard');
         }
@@ -93,28 +93,28 @@ export default function App() {
     };
   }, []);
 
-  // Determine initial view purely from clean URL pathname (no # hash tags)
+  // Determine initial view purely from clean URL pathname
   const getInitialView = () => {
     const path = window.location.pathname.toLowerCase();
     const hash = window.location.hash.toLowerCase();
 
-    // If returning from OAuth redirect with access_token in hash, start on dashboard
-    if (hash.includes('access_token') || path.includes('dashboard')) {
+    // If returning from OAuth redirect with access_token in hash, go to dashboard
+    if (hash.includes('access_token') || path === '/dashboard' || path.startsWith('/dashboard/')) {
       return 'dashboard';
     }
-    if (path.includes('login')) {
+    if (path === '/login' || path.startsWith('/login/')) {
       return 'login';
     }
-    if (path.includes('contact')) {
+    if (path === '/contact' || path.startsWith('/contact/')) {
       return 'contact';
     }
-    if (path.includes('pricing')) {
+    if (path === '/pricing' || path.startsWith('/pricing/')) {
       return 'pricing';
     }
-    if (path.includes('admin')) {
+    if (path === '/admin' || path.startsWith('/admin/')) {
       return 'admin-payments';
     }
-    return 'landing'; // Default starting page is the Landing Page
+    return 'landing'; // Default landing page for root /
   };
 
   const [currentView, setCurrentView] = useState(getInitialView);
@@ -571,14 +571,20 @@ export default function App() {
           )}
 
           {currentView === 'pricing' && (
-            <PricingPage onUpgrade={() => {}} />
+            <PricingPage 
+              onUpgrade={() => {}}
+              onNavigateLogin={() => navigateToView('login')}
+              onNavigateDashboard={() => navigateToView('dashboard')}
+              user={user}
+              csrfToken={csrfToken}
+            />
           )}
 
           {currentView === 'admin-payments' && (
             <AdminPaymentsPage onNavigateHome={() => navigateToView('landing')} />
           )}
 
-          {currentView === 'app' && (
+          {(currentView === 'dashboard' || currentView === 'app') && (
             (!authLoading && !user) ? (
             <LoginPage 
               onLoginSuccess={handleLoginSuccess}
