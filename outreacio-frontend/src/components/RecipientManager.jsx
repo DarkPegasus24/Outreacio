@@ -192,7 +192,7 @@ export default function RecipientManager({ recipients, onUpdateRecipients, onBac
             Add Recipients
           </h2>
           <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px', margin: 0 }}>
-            Tell us who should receive this email. Upload an Excel file — any column layout works.
+            Tell us who should receive this email. Upload an Excel file | any column layout works.
           </p>
         </div>
       </div>
@@ -234,7 +234,7 @@ export default function RecipientManager({ recipients, onUpdateRecipients, onBac
           {isParsing ? 'Scanning sheets and reading your file…' : 'Click to upload or drag & drop an Excel file'}
         </p>
         <p style={{ fontSize: '13px', color: 'var(--text-secondary)', maxWidth: '580px', margin: '0 auto', lineHeight: 1.5 }}>
-          Any Excel file works — we'll scan every sheet and column, and pull out valid email addresses automatically, even if they're mixed in with other text.
+          Any Excel file works | we'll scan every sheet and column, and pull out valid email addresses automatically, even if they're mixed in with other text.
         </p>
 
         {/* Inline No Emails Found Message */}

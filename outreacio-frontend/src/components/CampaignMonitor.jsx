@@ -240,7 +240,7 @@ export default function CampaignMonitor({
               className="btn btn-secondary btn-sm"
               style={{ fontSize: '12px', padding: '5px 12px', borderColor: throttleDelay === 500 ? 'var(--accent)' : undefined }}
             >
-              Fast — higher risk
+              Fast | higher risk
             </button>
             <button
               type="button"
@@ -258,7 +258,7 @@ export default function CampaignMonitor({
               className="btn btn-secondary btn-sm"
               style={{ fontSize: '12px', padding: '5px 12px', borderColor: throttleDelay === 5000 ? 'var(--accent)' : undefined }}
             >
-              Safest — slowest
+              Safest | slowest
             </button>
           </div>
         </div>

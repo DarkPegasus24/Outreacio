@@ -166,7 +166,7 @@ The palette balances warm earth tones and sun-drenched minerals against deep cha
 - **Pitch Charcoal (`#121212` / `#1A1A1A`):** Dominant for high-impact CTA containers, primary headlines, and footer panels.
 
 ### Surface & Background Tokens
-- **Canvas Base (`#FAFAF7`):** The foundational page color—a calm, warm off-white that eliminates screen glare.
+- **Canvas Base (`#FAFAF7`):** The foundational page color | a calm, warm off-white that eliminates screen glare.
 - **Surface Card Beige (`#EFECE6`):** Soft, low-contrast neutral surface used for step cards, FAQ rows, and mockup preview panels.
 - **Surface Card Subdued (`#E7E4DC`):** Subtle hover and active tier for interactive card layers.
 - **Code Mockup Shell (`#F4F2EC`):** Monospaced code and text previews.

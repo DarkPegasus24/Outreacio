@@ -27,6 +27,7 @@ const PLANS = {
     name: 'Free Tier',
     priceMonthly: 0,
     priceINR: 0,
+    priceInr: 0,
     inboxLimit: 1,
     sendCapDaily: 25,
     features: {
@@ -48,6 +49,7 @@ const PLANS = {
     name: 'Paid Plan',
     priceMonthly: 4.99,
     priceINR: 425, // INR equivalent (~₹425/mo at ₹85/$)
+    priceInr: 425,
     inboxLimit: null, // Unlimited
     sendCapDaily: 150, // 150 emails / day
     features: {
@@ -64,51 +66,6 @@ const PLANS = {
       sendsPerDay: 150
     }
   }
-  /*
-  // COMMENTED OUT: Service limited to dedicated email delivery service
-  starter: {
-    id: 'starter',
-    name: 'Starter',
-    priceMonthly: 17,
-    inboxLimit: 3,
-    sendCapDaily: null,
-    aiCreditsMonthly: 500,
-    verificationCreditsMonthly: 500,
-    features: {
-      crmIntegration: false,
-      advancedAnalytics: false,
-      teamSeats: 1,
-      priorityQueue: false
-    },
-    limits: {
-      inboxes: 3,
-      sendsPerDay: Infinity,
-      aiCreditsPerMonth: 500,
-      verificationCreditsPerMonth: 500
-    }
-  },
-  business: {
-    id: 'business',
-    name: 'Business',
-    priceMonthly: 89,
-    inboxLimit: null,
-    sendCapDaily: null,
-    aiCreditsMonthly: 10000,
-    verificationCreditsMonthly: 15000,
-    features: {
-      crmIntegration: true,
-      advancedAnalytics: true,
-      teamSeats: 5,
-      priorityQueue: true
-    },
-    limits: {
-      inboxes: Infinity,
-      sendsPerDay: Infinity,
-      aiCreditsPerMonth: 10000,
-      verificationCreditsPerMonth: 15000
-    }
-  }
-  */
 };
 // Endpoint to expose plan definitions to frontend
 app.get('/api/plans', (req, res) => {
@@ -625,7 +582,7 @@ async function processJob(jobId, config) {
 
         const logEntry = {
             index: i + 1,
-            companyName: companyName || '—',
+            companyName: companyName || '|',
             email: targetEmail,
             timestamp: new Date().toLocaleTimeString(),
             status: 'pending',

@@ -64,7 +64,7 @@ export default function CampaignHistory({ csrfToken, onSwitchToNewCampaign }) {
   };
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return '—';
+    if (!dateStr) return '|';
     try {
       const d = new Date(dateStr);
       return d.toLocaleString('en-US', {

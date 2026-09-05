@@ -6,7 +6,7 @@ A bulk email automation application for sending personalized emails through a Gm
 
 ## What It Does
 
-- **Flexible List Upload:** Upload a recipient list as an Excel file (.xlsx or .xls). Any column layout works — Outreacio automatically detects which column contains email addresses and which contains company names. Rows without a valid email are skipped automatically.
+- **Flexible List Upload:** Upload a recipient list as an Excel file (.xlsx or .xls). Any column layout works | Outreacio automatically detects which column contains email addresses and which contains company names. Rows without a valid email are skipped automatically.
 - **Gmail Integration:** Connect your Gmail account using a Google App Password with connection verification before sending.
 - **Dynamic Personalization:** Use `{{Company Name}}` and `{{Email}}` placeholder tags to personalize each outgoing email.
 - **Configurable Rate Limiting:** Adjustable throttle delay between consecutive emails to maintain deliverability standards.

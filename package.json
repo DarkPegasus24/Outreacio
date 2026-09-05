@@ -1,7 +1,7 @@
 {
   "name": "outreacio",
   "version": "1.0.0",
-  "description": "Outreacio — Professional bulk email automation platform",
+  "description": "Outreacio | Professional bulk email automation platform",
   "private": true,
   "scripts": {
     "install-all": "npm install && npm --prefix outreacio-frontend install && npm --prefix outreacio-backend install",
