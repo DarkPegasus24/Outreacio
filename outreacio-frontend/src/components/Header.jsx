@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { User, LogOut, LayoutDashboard, ChevronDown } from 'lucide-react';
+import { User, LogOut, LayoutDashboard, ChevronDown, Sun, Moon } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 import Logo from './Logo';
 
 export default function Header({ 
@@ -12,6 +13,7 @@ export default function Header({
   onLogout,
   onRequireAuth
 }) {
+  const { theme, toggleTheme } = useTheme();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
@@ -63,7 +65,7 @@ export default function Header({
             />
             <path
               d="M 0 0 A 24 24 0 0 1 23.5 24.5"
-              stroke="#000000"
+              stroke="var(--navbar-border, transparent)"
               strokeWidth="0.9"
               fill="none"
               strokeLinecap="round"
@@ -80,7 +82,7 @@ export default function Header({
             />
             <path
               d="M 0.5 24.5 A 24 24 0 0 1 24 0"
-              stroke="#000000"
+              stroke="var(--navbar-border, transparent)"
               strokeWidth="0.9"
               fill="none"
               strokeLinecap="round"
@@ -94,7 +96,7 @@ export default function Header({
 
       {/* Right: Nav Links & Auth / CTA Button */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-        <nav className="top-capsule-nav-links">
+        <nav className="top-capsule-nav-links" style={{ gap: '4px' }}>
           <button
             type="button"
             className={`top-capsule-nav-link ${currentView === 'landing' ? 'active' : ''}`}
@@ -102,7 +104,6 @@ export default function Header({
           >
             Features
           </button>
-          <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
 
           <button
             type="button"
@@ -111,7 +112,6 @@ export default function Header({
           >
             Workflows
           </button>
-          <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
 
           <button
             type="button"
@@ -120,7 +120,6 @@ export default function Header({
           >
             Pricing
           </button>
-          <span style={{ fontSize: '10px', color: 'rgba(37, 31, 25, 0.4)' }}>▪</span>
 
           <button
             type="button"
@@ -185,7 +184,7 @@ export default function Header({
                 border: '1px solid var(--border)',
                 borderRadius: '14px',
                 padding: '8px',
-                minWidth: '220px',
+                minWidth: '240px',
                 boxShadow: '0 10px 30px rgba(37, 31, 25, 0.1)',
                 zIndex: 200,
                 animation: 'fadeIn 0.2s ease'
@@ -229,6 +228,45 @@ export default function Header({
                     <span>Open Dashboard</span>
                   </button>
                 )}
+
+                {/* Theme Toggle - Only visible when authenticated */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    toggleTheme();
+                    setDropdownOpen(false);
+                  }}
+                  style={{
+                    width: '100%',
+                    textAlign: 'left',
+                    padding: '8px 12px',
+                    background: 'none',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '13px',
+                    fontWeight: '500',
+                    color: 'var(--text-primary)',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    transition: 'background 0.15s ease'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = 'var(--bg-surface)'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = 'none'}
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <Sun size={15} color="var(--accent)" />
+                      <span>Light Mode</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon size={15} color="var(--accent)" />
+                      <span>Dark Mode</span>
+                    </>
+                  )}
+                </button>
 
                 <button
                   type="button"

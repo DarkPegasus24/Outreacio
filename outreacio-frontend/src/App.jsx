@@ -14,6 +14,7 @@ import CampaignHistory from './components/CampaignHistory';
 import LoginPage from './components/LoginPage';
 import PageTransitionLoader from './components/PageTransitionLoader';
 import AdminPaymentsPage from './components/AdminPaymentsPage';
+import { ThemeProvider } from './context/ThemeContext';
 import { supabase } from './supabaseClient';
 import './App.css';
 
@@ -272,7 +273,7 @@ export default function App() {
 
   // Validation Flags for Wizard Gates
   const isStep1Valid = isGmailVerified;
-  // Every entry in `recipients` is already a confirmed-valid email — invalid
+  // Every entry in `recipients` is already a confirmed-valid email | invalid
   // rows are filtered out silently at upload time in RecipientManager.
   const validRecipients = recipients;
   const isStep2Valid = validRecipients.length > 0;
@@ -511,86 +512,87 @@ export default function App() {
   };
 
   return (
-    <div className="app-container outreacio-app">
-      <Header 
-        currentView={currentView}
-        onNavigateView={navigateToView}
-        onToggleView={() => {
-          if (currentView === 'dashboard') {
-            document.title = 'Outreacio | Campaign Dashboard';
-            if (!window.location.pathname.includes('/dashboard')) {
-              window.history.pushState({ view: 'dashboard' }, '', '/dashboard');
+    <ThemeProvider>
+      <div className="app-container outreacio-app">
+        <Header 
+          currentView={currentView}
+          onNavigateView={navigateToView}
+          onToggleView={() => {
+            if (currentView === 'dashboard') {
+              document.title = 'Outreacio | Campaign Dashboard';
+              if (!window.location.pathname.includes('/dashboard')) {
+                window.history.pushState({ view: 'dashboard' }, '', '/dashboard');
+              }
+            } else if (currentView === 'pricing') {
+              document.title = 'Outreacio | Pricing';
+              if (!window.location.pathname.includes('/pricing')) {
+                window.history.pushState({ view: 'pricing' }, '', '/pricing');
+              }
+            } else {
+              document.title = 'Outreacio | Campaign Dashboard';
+              if (!window.location.pathname.includes('/dashboard')) {
+                window.history.pushState({ view: 'dashboard' }, '', '/dashboard');
+              }
             }
-          } else if (currentView === 'pricing') {
-            document.title = 'Outreacio | Pricing';
-            if (!window.location.pathname.includes('/pricing')) {
-              window.history.pushState({ view: 'pricing' }, '', '/pricing');
-            }
-          } else {
-            document.title = 'Outreacio | Campaign Dashboard';
-            if (!window.location.pathname.includes('/dashboard')) {
-              window.history.pushState({ view: 'dashboard' }, '', '/dashboard');
-            }
-          }
-          return currentView === 'dashboard' ? 'landing' : 'dashboard';
-        }}
-        onOpenHelp={() => setIsHelpOpen(true)}
-        onResetAll={handleResetAll}
-        user={user}
-        onLogout={handleLogout}
-        onRequireAuth={() => navigateToView('login')}
-      />
+            return currentView === 'dashboard' ? 'landing' : 'dashboard';
+          }}
+          onOpenHelp={() => setIsHelpOpen(true)}
+          onResetAll={handleResetAll}
+          user={user}
+          onLogout={handleLogout}
+          onRequireAuth={() => navigateToView('login')}
+        />
 
-      <DeliverabilityModal 
-        isOpen={isHelpOpen}
-        onClose={() => setIsHelpOpen(false)}
-      />
+        <DeliverabilityModal 
+          isOpen={isHelpOpen}
+          onClose={() => setIsHelpOpen(false)}
+        />
 
-      {isTransitioning ? (
-        <PageTransitionLoader targetView={transitionTarget} />
-      ) : (
-        <>
-          {currentView === 'login' && (
-            <LoginPage 
-              onLoginSuccess={handleLoginSuccess}
-              onNavigateHome={() => navigateToView('landing')}
-            />
-          )}
+        {isTransitioning ? (
+          <PageTransitionLoader targetView={transitionTarget} />
+        ) : (
+          <>
+            {currentView === 'login' && (
+              <LoginPage 
+                onLoginSuccess={handleLoginSuccess}
+                onNavigateHome={() => navigateToView('landing')}
+              />
+            )}
 
-          {currentView === 'landing' && (
-            <LandingPage 
-              onLaunchApp={handleLaunchApp} 
-              onNavigateContact={() => navigateToView('contact')}
-            />
-          )}
+            {currentView === 'landing' && (
+              <LandingPage 
+                onLaunchApp={handleLaunchApp} 
+                onNavigateContact={() => navigateToView('contact')}
+              />
+            )}
 
-          {currentView === 'contact' && (
-            <ContactPage 
-              onLaunchApp={handleLaunchApp} 
-            />
-          )}
+            {currentView === 'contact' && (
+              <ContactPage 
+                onLaunchApp={handleLaunchApp} 
+              />
+            )}
 
-          {currentView === 'pricing' && (
-            <PricingPage 
-              onUpgrade={() => {}}
-              onNavigateLogin={() => navigateToView('login')}
-              onNavigateDashboard={() => navigateToView('dashboard')}
-              user={user}
-              csrfToken={csrfToken}
-            />
-          )}
+            {currentView === 'pricing' && (
+              <PricingPage 
+                onUpgrade={() => {}}
+                onNavigateLogin={() => navigateToView('login')}
+                onNavigateDashboard={() => navigateToView('dashboard')}
+                user={user}
+                csrfToken={csrfToken}
+              />
+            )}
 
-          {currentView === 'admin-payments' && (
-            <AdminPaymentsPage onNavigateHome={() => navigateToView('landing')} />
-          )}
+            {currentView === 'admin-payments' && (
+              <AdminPaymentsPage onNavigateHome={() => navigateToView('landing')} />
+            )}
 
-          {(currentView === 'dashboard' || currentView === 'app') && (
-            (!authLoading && !user) ? (
-            <LoginPage 
-              onLoginSuccess={handleLoginSuccess}
-              onNavigateHome={() => navigateToView('landing')}
-            />
-          ) : (
+            {(currentView === 'dashboard' || currentView === 'app') && (
+              (!authLoading && !user) ? (
+              <LoginPage 
+                onLoginSuccess={handleLoginSuccess}
+                onNavigateHome={() => navigateToView('landing')}
+              />
+            ) : (
             <main style={{
               maxWidth: '960px',
               margin: '0 auto',
@@ -753,6 +755,7 @@ export default function App() {
           )}
         </>
       )}
-    </div>
+      </div>
+    </ThemeProvider>
   );
 }

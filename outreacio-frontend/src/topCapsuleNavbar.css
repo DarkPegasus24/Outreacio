@@ -28,7 +28,7 @@
   background: var(--bg-primary, #f7f7f4);
   background-color: var(--bg-primary, #f7f7f4);
   padding: 12px 28px 14px;
-  border: 1.5px solid #000000;
+  border: 1.5px solid var(--navbar-border, transparent);
   border-top: none;
   border-top-left-radius: 0;
   border-top-right-radius: 0;
@@ -66,7 +66,7 @@
 
 .top-capsule-nav-link:hover {
   color: var(--text-primary);
-  background: rgba(37, 31, 25, 0.05);
+  background: var(--bg-surface);
 }
 
 /* Inverted (Concave) Top Corner Curves */

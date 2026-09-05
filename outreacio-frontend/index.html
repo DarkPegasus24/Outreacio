@@ -6,6 +6,15 @@
     <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="description" content="Outreacio | Professional bulk email automation platform with smart multi-sheet Excel parsing, real-time live delivery tracking, and zero disk credential storage." />
     <title>Outreacio | Bulk Email Automation Platform</title>
+    <script>
+      (function() {
+        try {
+          var saved = localStorage.getItem('outreacio_theme');
+          var theme = saved || (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
