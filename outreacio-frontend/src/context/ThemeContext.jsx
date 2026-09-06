@@ -3,25 +3,28 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children, user }) {
-  const [theme, setTheme] = useState('light');
+  const [theme, setTheme] = useState(() => {
+    // Read saved preference immediately to avoid flash
+    return localStorage.getItem('outreacio-theme') || 'light';
+  });
   const [isLoading, setIsLoading] = useState(true);
 
-  // Before login, theme is always white ('light').
-  // After login, theme restores the user's saved preference or defaults to 'light'.
+  // On mount / user change, sync data-theme attribute
   useEffect(() => {
-    if (!user) {
-      setTheme('light');
-      document.documentElement.setAttribute('data-theme', 'light');
-    } else {
+    document.documentElement.setAttribute('data-theme', theme);
+    setIsLoading(false);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // When user logs in, restore their saved preference; when they log out, keep current theme
+  useEffect(() => {
+    if (user) {
       const savedTheme = localStorage.getItem('outreacio-theme') || 'light';
       setTheme(savedTheme);
       document.documentElement.setAttribute('data-theme', savedTheme);
     }
-    setIsLoading(false);
   }, [user]);
 
   const toggleTheme = () => {
-    if (!user) return; // Theme switching is only enabled after login
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
     localStorage.setItem('outreacio-theme', newTheme);
@@ -29,7 +32,7 @@ export function ThemeProvider({ children, user }) {
   };
 
   return (
-    <ThemeContext.Provider value={{ theme: user ? theme : 'light', toggleTheme, isLoading }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, isLoading }}>
       {children}
     </ThemeContext.Provider>
   );
