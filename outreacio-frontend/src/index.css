@@ -1089,14 +1089,73 @@ html[data-theme="dark"] .parley-chat-btn:hover {
   }
 }
 
-@media (max-width: 600px) {
-  .parley-kpi-grid {
-    grid-template-columns: 1fr;
+.parley-kpi-grid-desktop {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  align-items: stretch;
+  margin-top: 36px;
+}
+
+.parley-kpi-grid-mobile {
+  display: none;
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .parley-kpi-grid-desktop {
+    grid-template-columns: repeat(2, 1fr);
     gap: 16px;
   }
 }
 
 @media (max-width: 768px) {
+  .parley-kpi-grid-desktop {
+    display: none !important;
+  }
+
+  .parley-kpi-grid-mobile {
+    display: flex !important;
+    flex-direction: column;
+    gap: 18px;
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .parley-mobile-kpi-card {
+    background: var(--bg-white);
+    border-radius: 24px;
+    padding: 14px 14px 22px;
+    border: 1px solid var(--border);
+    box-shadow: 0 10px 30px rgba(37, 31, 25, 0.05);
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .parley-mobile-kpi-card:hover {
+    transform: none !important;
+    box-shadow: 0 10px 30px rgba(37, 31, 25, 0.05) !important;
+  }
+
+  .parley-mobile-kpi-card .parley-card-canvas {
+    background: var(--bg-surface);
+    border-radius: 16px;
+    height: 180px;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    margin-bottom: 16px;
+    animation: none !important;
+    transition: none !important;
+    transform: none !important;
+  }
+
   #benefits,
   #benefits *,
   .parley-kpi-grid,
@@ -1197,22 +1256,25 @@ html[data-theme="dark"] .parley-card-inactive:hover {
   box-shadow: 0 14px 36px rgba(0, 0, 0, 0.45);
 }
 
-html[data-theme="dark"] .parley-card-active {
+html[data-theme="dark"] .parley-card-active,
+html[data-theme="dark"] .parley-mobile-kpi-card {
   background: #1e1e1e;
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6);
 }
 
-html[data-theme="dark"] .parley-card-canvas {
+html[data-theme="dark"] .parley-card-canvas,
+html[data-theme="dark"] .parley-mobile-kpi-card .parley-card-canvas {
   background: #282828;
   border: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-html[data-theme="dark"] .parley-card-pill {
-  background: #161616;
-  color: #f5f5f5;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+html[data-theme="dark"] .parley-card-pill,
+html[data-theme="dark"] .parley-card-pill-inner {
+  background: #161616 !important;
+  color: #f5f5f5 !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
 }
 
 html[data-theme="dark"] .parley-card-number {

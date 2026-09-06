@@ -204,8 +204,8 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
           </div>
         </div>
 
-        {/* 4 Parley-Style Cards Grid */}
-        <div className="parley-kpi-grid">
+        {/* Desktop 4 Parley-Style Interactive Cards Grid */}
+        <div className="parley-kpi-grid parley-kpi-grid-desktop">
           {kpis.map((kpi, idx) => {
             const isActive = activeKpi === idx;
 
@@ -291,7 +291,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
                   {kpi.num}
                 </div>
 
-                {/* Center: Geometric Scattered Pixel Art (Exact Match to Image) */}
+                {/* Center: Geometric Scattered Pixel Art */}
                 <div style={{ position: 'relative', width: '100%', height: '180px', margin: 'auto 0' }}>
                   {idx === 0 && (
                     <>
@@ -305,74 +305,44 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
                     </>
                   )}
 
-                  {/* Card 02: Exact Blocks from Reference Image */}
                   {idx === 1 && (
                     <>
-                      {/* Top right dark orange */}
                       <div style={{ position: 'absolute', top: '35%', left: '68%', width: '17px', height: '17px', background: '#f48d16', borderRadius: '2px' }} />
-                      {/* Below top right peach */}
                       <div style={{ position: 'absolute', top: '50%', left: '58%', width: '17px', height: '17px', background: '#f0ceaa', borderRadius: '2px' }} />
-                      {/* Right pale peach */}
                       <div style={{ position: 'absolute', top: '60%', left: '78%', width: '17px', height: '17px', background: '#fae0c7', borderRadius: '2px' }} />
-                      {/* Mid left step */}
                       <div style={{ position: 'absolute', top: '66%', left: '38%', width: '17px', height: '17px', background: '#f3ab66', borderRadius: '2px' }} />
-                      {/* Lower mid orange */}
                       <div style={{ position: 'absolute', top: '74%', left: '62%', width: '17px', height: '17px', background: '#f48d16', borderRadius: '2px' }} />
-                      {/* Far left bottom tan */}
                       <div style={{ position: 'absolute', top: '77%', left: '28%', width: '17px', height: '17px', background: '#f0ae6b', borderRadius: '2px' }} />
-                      {/* Far right bottom orange */}
                       <div style={{ position: 'absolute', top: '88%', left: '80%', width: '17px', height: '17px', background: '#f29e4b', borderRadius: '2px' }} />
                     </>
                   )}
 
-                  {/* Card 03: Exact Blocks from Reference Image */}
                   {idx === 2 && (
                     <>
-                      {/* Top right dark orange */}
                       <div style={{ position: 'absolute', top: '35%', left: '70%', width: '17px', height: '17px', background: '#f48d16', borderRadius: '2px' }} />
-                      {/* Mid-top center dark orange */}
                       <div style={{ position: 'absolute', top: '50%', left: '35%', width: '17px', height: '17px', background: '#f48d16', borderRadius: '2px' }} />
-                      {/* Center-right dark orange */}
                       <div style={{ position: 'absolute', top: '56%', left: '60%', width: '17px', height: '17px', background: '#f48d16', borderRadius: '2px' }} />
-                      {/* Right pale peach */}
                       <div style={{ position: 'absolute', top: '60%', left: '80%', width: '17px', height: '17px', background: '#fae0c7', borderRadius: '2px' }} />
-                      {/* Mid-left step */}
                       <div style={{ position: 'absolute', top: '62%', left: '25%', width: '17px', height: '17px', background: '#f29e4b', borderRadius: '2px' }} />
-                      {/* Bottom-left tan */}
                       <div style={{ position: 'absolute', top: '74%', left: '15%', width: '17px', height: '17px', background: '#f29e4b', borderRadius: '2px' }} />
-                      {/* Lower center tan */}
                       <div style={{ position: 'absolute', top: '74%', left: '40%', width: '17px', height: '17px', background: '#f0ae6b', borderRadius: '2px' }} />
-                      {/* Lower center pale peach */}
                       <div style={{ position: 'absolute', top: '71%', left: '50%', width: '17px', height: '17px', background: '#fae0c7', borderRadius: '2px' }} />
-                      {/* Lower right orange */}
                       <div style={{ position: 'absolute', top: '74%', left: '66%', width: '17px', height: '17px', background: '#f29e4b', borderRadius: '2px' }} />
-                      {/* Bottom center tan */}
                       <div style={{ position: 'absolute', top: '83%', left: '46%', width: '17px', height: '17px', background: '#f0ae6b', borderRadius: '2px' }} />
-                      {/* Far bottom right orange */}
                       <div style={{ position: 'absolute', top: '88%', left: '80%', width: '17px', height: '17px', background: '#f29e4b', borderRadius: '2px' }} />
                     </>
                   )}
 
-                  {/* Card 04: Exact Blocks from Reference Image */}
                   {idx === 3 && (
                     <>
-                      {/* Top right dark orange */}
                       <div style={{ position: 'absolute', top: '35%', left: '78%', width: '17px', height: '17px', background: '#f48d16', borderRadius: '2px' }} />
-                      {/* Mid-top left orange */}
                       <div style={{ position: 'absolute', top: '46%', left: '50%', width: '17px', height: '17px', background: '#f29e4b', borderRadius: '2px' }} />
-                      {/* Below top right tan */}
                       <div style={{ position: 'absolute', top: '50%', left: '78%', width: '17px', height: '17px', background: '#f0ae6b', borderRadius: '2px' }} />
-                      {/* Right pale peach */}
                       <div style={{ position: 'absolute', top: '60%', left: '90%', width: '17px', height: '17px', background: '#fae0c7', borderRadius: '2px' }} />
-                      {/* Center step tan */}
                       <div style={{ position: 'absolute', top: '65%', left: '60%', width: '17px', height: '17px', background: '#f0ae6b', borderRadius: '2px' }} />
-                      {/* Lower right dark orange */}
                       <div style={{ position: 'absolute', top: '74%', left: '75%', width: '17px', height: '17px', background: '#f48d16', borderRadius: '2px' }} />
-                      {/* Bottom left dark orange */}
                       <div style={{ position: 'absolute', top: '88%', left: '33%', width: '17px', height: '17px', background: '#f48d16', borderRadius: '2px' }} />
-                      {/* Bottom center orange */}
                       <div style={{ position: 'absolute', top: '88%', left: '63%', width: '17px', height: '17px', background: '#f29e4b', borderRadius: '2px' }} />
-                      {/* Bottom right tan */}
                       <div style={{ position: 'absolute', top: '88%', left: '88%', width: '17px', height: '17px', background: '#f0ae6b', borderRadius: '2px' }} />
                     </>
                   )}
@@ -391,6 +361,71 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
               </div>
             );
           })}
+        </div>
+
+        {/* Mobile 4 Cards View: Every Card rendered in full static design with zero animation */}
+        <div className="parley-kpi-grid-mobile">
+          {kpis.map((kpi, idx) => (
+            <div key={idx} className="parley-mobile-kpi-card">
+              {/* Top Textured Canvas Box with Notification Pill */}
+              <div className="parley-card-canvas">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', maxWidth: '92%' }}>
+                  <div style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '6px',
+                    background: '#f48d16',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#ffffff',
+                    fontSize: '13px',
+                    fontWeight: '800',
+                    boxShadow: '0 3px 8px rgba(244, 141, 22, 0.35)',
+                    flexShrink: 0
+                  }}>
+                    ?
+                  </div>
+
+                  <div className="parley-card-pill-inner" style={{
+                    background: 'var(--bg-white)',
+                    borderRadius: '8px',
+                    padding: '10px 14px',
+                    fontSize: '12.5px',
+                    fontWeight: '600',
+                    color: 'var(--text-primary)',
+                    boxShadow: 'var(--shadow-card)',
+                    border: '1px solid var(--border)',
+                    lineHeight: 1.3
+                  }}>
+                    {kpi.pill.text}
+                  </div>
+                </div>
+              </div>
+
+              {/* Bottom Area: Bold Title & Description */}
+              <div style={{ padding: '4px 6px 0' }}>
+                <h3 style={{
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '1.45rem',
+                  fontWeight: 700,
+                  lineHeight: 1.18,
+                  color: 'var(--text-primary)',
+                  marginBottom: '10px'
+                }}>
+                  {kpi.title}
+                </h3>
+                <p style={{
+                  fontSize: '13px',
+                  color: 'var(--text-secondary)',
+                  lineHeight: 1.55,
+                  margin: 0
+                }}>
+                  {kpi.desc}
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       </section>
 
