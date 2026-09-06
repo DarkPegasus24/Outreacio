@@ -260,26 +260,6 @@ export default function PricingPage({ onUpgrade, onGetStarted, csrfToken }) {
                 <CheckIcon />
                 <span>25 emails / day</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
-                <CheckIcon />
-                <span>Smart Multi-Sheet Excel &amp; CSV parser</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
-                <CheckIcon />
-                <span>Dynamic tags (&#123;&#123;Name&#125;&#125;, &#123;&#123;Company&#125;&#125;)</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
-                <CheckIcon />
-                <span>Real-time delivery tracking &amp; logs</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
-                <CheckIcon />
-                <span>Zero disk storage (Safe in-memory SMTP)</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-muted)' }}>
-                <CheckIcon dimmed />
-                <span style={{ opacity: 0.65 }}>Priority email dispatch &amp; faster rate</span>
-              </div>
             </div>
           </div>
 
@@ -386,26 +366,6 @@ export default function PricingPage({ onUpgrade, onGetStarted, csrfToken }) {
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
                 <WhiteCheckIcon />
                 <span>150 emails / day</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
-                <WhiteCheckIcon />
-                <span>Smart Multi-Sheet Excel &amp; CSV parser</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
-                <WhiteCheckIcon />
-                <span>Dynamic tags (&#123;&#123;Name&#125;&#125;, &#123;&#123;Company&#125;&#125;)</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
-                <WhiteCheckIcon />
-                <span>Real-time delivery tracking &amp; logs</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
-                <WhiteCheckIcon />
-                <span>Zero disk storage (Safe in-memory SMTP)</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
-                <WhiteCheckIcon />
-                <span>Priority email dispatch &amp; faster rate</span>
               </div>
             </div>
           </div>
