@@ -1,7 +1,5 @@
 /* ==========================================================================
-   TOP ATTACHED CAPSULE NAVBAR
-   Flush-attached to the top with rounded bottom capsule corners,
-   matching the page background (#f7f7f4 / var(--bg-primary)).
+   TOP ATTACHED CAPSULE NAVBAR (Desktop & Mobile)
    ========================================================================== */
 .top-capsule-navbar-wrapper {
   position: sticky;
@@ -40,6 +38,19 @@
   gap: 20px;
 }
 
+.navbar-brand-container {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.top-capsule-desktop-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
 .top-capsule-nav-links {
   display: flex;
   align-items: center;
@@ -64,12 +75,12 @@
   align-items: center;
 }
 
-.top-capsule-nav-link:hover {
+.top-capsule-nav-link:hover, .top-capsule-nav-link.active {
   color: var(--text-primary);
   background: var(--bg-surface);
 }
 
-/* Inverted (Concave) Top Corner Curves */
+/* Inverted (Concave) Top Corner Curves (Desktop Only) */
 .top-capsule-corner {
   position: absolute;
   top: 0;
@@ -95,30 +106,311 @@
   overflow: visible;
 }
 
-@media (max-width: 768px) {
-  .top-capsule-navbar {
-    max-width: 96%;
-    padding: 10px 18px 12px;
-    border-top: none;
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
-    border-bottom-left-radius: 18px;
-    border-bottom-right-radius: 18px;
+/* Minimalist 3-Line Mobile Hamburger Icon (Exact Parley Style) */
+.mobile-menu-toggle-btn {
+  display: none;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  padding: 8px 4px;
+  border-radius: 6px;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.mobile-menu-toggle-btn:hover {
+  opacity: 0.75;
+}
+
+.mobile-menu-toggle-btn:active {
+  transform: scale(0.92);
+}
+
+.parley-hamburger-icon {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  width: 22px;
+  height: 13px;
+}
+
+.parley-hamburger-icon span {
+  display: block;
+  width: 100%;
+  height: 1.8px;
+  background-color: var(--text-primary, #251f19);
+  border-radius: 2px;
+}
+
+/* ==========================================================================
+   PARLEY MOBILE DRAWER OVERLAY (Half-Height Snug Attached Panel + Backdrop)
+   ========================================================================== */
+.parley-mobile-backdrop {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(20, 16, 12, 0.45);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  z-index: 999998;
+  animation: parleyBackdropFadeIn 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.parley-mobile-backdrop.closing {
+  animation: parleyBackdropFadeOut 0.2s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+@keyframes parleyBackdropFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes parleyBackdropFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.parley-mobile-menu-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100vw;
+  max-height: 85vh;
+  background-color: var(--bg-primary, #f7f7f4);
+  z-index: 999999;
+  display: flex;
+  flex-direction: column;
+  padding: 18px 20px 24px;
+  border-bottom-left-radius: 28px;
+  border-bottom-right-radius: 28px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.25), 0 4px 16px rgba(0, 0, 0, 0.08);
+  overflow-y: auto;
+  transform-origin: top center;
+  animation: parleyDrawerSlideDown 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.parley-mobile-menu-overlay.closing {
+  animation: parleyDrawerSlideUp 0.22s cubic-bezier(0.7, 0, 0.84, 0) forwards;
+}
+
+@keyframes parleyDrawerSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-100%);
   }
-  .top-capsule-corner {
-    width: 18px;
-    height: 18px;
-  }
-  .top-capsule-corner-left {
-    left: -18px;
-  }
-  .top-capsule-corner-right {
-    right: -18px;
-  }
-  .top-capsule-corner svg {
-    width: 18px;
-    height: 18px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
+@keyframes parleyDrawerSlideUp {
+  from {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+}
 
+.parley-mobile-menu-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 22px;
+}
+
+.parley-mobile-close-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-primary, #251f19);
+  cursor: pointer;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.parley-mobile-close-btn:active {
+  transform: scale(0.9);
+}
+
+.parley-mobile-close-btn:hover {
+  opacity: 0.7;
+}
+
+.parley-mobile-menu-body {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.parley-menu-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.parley-menu-main-link {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary, #251f19);
+  background: none;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  display: inline-block;
+  font-family: inherit;
+  letter-spacing: -0.01em;
+  transition: color 0.15s ease;
+}
+
+.parley-menu-main-link:hover, .parley-menu-main-link.active {
+  color: var(--accent, #f48d16);
+}
+
+.parley-menu-subitems-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 10px;
+  padding-left: 2px;
+}
+
+.parley-menu-subitem-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14.5px;
+  font-weight: 500;
+  color: var(--text-secondary, #5c554e);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  transition: color 0.15s ease, transform 0.15s ease;
+}
+
+.parley-menu-subitem-link:active {
+  transform: translateX(3px);
+}
+
+.parley-menu-subitem-link:hover {
+  color: var(--text-primary, #251f19);
+}
+
+.parley-orange-bullet {
+  width: 6px;
+  height: 6px;
+  background-color: #f48d16;
+  border-radius: 1.5px;
+  flex-shrink: 0;
+}
+
+.parley-mobile-menu-footer {
+  margin-top: 22px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(37, 31, 25, 0.08);
+}
+
+.parley-mobile-hire-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 14px;
+  background: #1c1815;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  padding: 6px 20px 6px 6px;
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease;
+  width: fit-content;
+}
+
+.parley-mobile-hire-btn:active {
+  transform: scale(0.98);
+}
+
+.parley-mobile-hire-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 8px;
+  background: #f48d16;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #1c1815;
+  font-weight: 800;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   MOBILE VIEW (Exact Parley Header Layout: Logo Top-Left, Menu Top-Right)
+   ========================================================================== */
+@media (max-width: 768px) {
+  .top-capsule-navbar-wrapper {
+    position: relative;
+    width: 100%;
+    padding: 18px 16px 12px;
+    margin-bottom: 6px;
+    pointer-events: auto;
+    background: transparent;
+    display: block !important;
+  }
+
+  .top-capsule-navbar {
+    max-width: 100%;
+    width: 100%;
+    display: flex !important;
+    flex-direction: row !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    padding: 0 !important;
+    border: none !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    box-shadow: none !important;
+    outline: none !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    border-radius: 0 !important;
+    gap: 0 !important;
+  }
+
+  .navbar-brand-container {
+    display: flex !important;
+    align-items: center !important;
+    flex-shrink: 0 !important;
+    margin: 0 !important;
+  }
+
+  .top-capsule-corner {
+    display: none !important;
+  }
+
+  .top-capsule-desktop-nav {
+    display: none !important;
+  }
+
+  .mobile-menu-toggle-btn {
+    display: inline-flex !important;
+    margin-left: auto !important;
+    flex-shrink: 0 !important;
+  }
+}

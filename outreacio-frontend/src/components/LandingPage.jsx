@@ -132,37 +132,39 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
         <div className="parley-hero-overlay" />
 
         <div style={{ position: 'relative', zIndex: 2, maxWidth: '820px', margin: '0 auto' }}>
-          <h1 style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 'clamp(2.5rem, 5.8vw, 4.2rem)',
-            lineHeight: 1.1,
-            fontWeight: 700,
-            color: '#ffffff',
-            letterSpacing: '-0.03em',
-            marginBottom: '16px',
-            textShadow: '0 3px 18px rgba(0, 0, 0, 0.45)'
-          }}>
-            The bulk sender that works with you,<br />
-            <span style={{ fontStyle: 'italic', fontWeight: 400 }}>not just for you</span>
+          <h1 className="parley-hero-title">
+            <span className="hero-title-desktop">
+              The bulk sender<br />
+              that works <span className="parley-hero-italic">with</span><br />
+              <span className="parley-hero-italic">you</span>, not just for you
+            </span>
+            <span className="hero-title-mobile">
+              The bulk sender<br />
+              that works<br />
+              <span className="parley-hero-italic">with you</span>, not<br />
+              just for you
+            </span>
           </h1>
 
-          <p style={{
-            color: 'rgba(255, 255, 255, 0.95)',
-            fontSize: 'clamp(1.05rem, 2.2vw, 1.22rem)',
-            maxWidth: '620px',
-            margin: '0 auto 28px',
-            lineHeight: 1.6,
-            textShadow: '0 2px 10px rgba(0, 0, 0, 0.35)'
-          }}>
-            Send personalized emails to hundreds of companies in minutes. No copy-paste. No spam flags. Just smart, fast outreach.
+          <p className="parley-hero-subtitle">
+            <span className="hero-sub-desktop">
+              Outreacio thinks, plans, and acts alongside you | handling<br />
+              emails, scheduling, and live workflows<br />
+              so you can focus on the work only you can do.
+            </span>
+            <span className="hero-sub-mobile">
+              Outreacio thinks, plans, and acts alongside you | handling emails, scheduling, and live workflows so you can focus on the work only you can do.
+            </span>
           </p>
 
           <div style={{ display: 'flex', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
-            <button onClick={onLaunchApp} className="parley-chat-btn">
-              <div className="parley-chat-icon">
-                &gt;
+            <button onClick={onLaunchApp} className="parley-hero-cta-btn">
+              <div className="parley-hero-cta-icon">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
               </div>
-              <span>Get started now</span>
+              <span>Get started free</span>
             </button>
           </div>
         </div>
@@ -213,7 +215,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
                 <div
                   key={idx}
                   onClick={() => setActiveKpi(idx)}
-                  className="parley-card-active animate-fade-in"
+                  className="parley-card-active"
                 >
                   {/* Top Textured Canvas Box with Notification Pill */}
                   <div className="parley-card-canvas">

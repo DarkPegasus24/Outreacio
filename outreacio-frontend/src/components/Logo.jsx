@@ -2,14 +2,14 @@ import React from 'react';
 
 /**
  * Outreacio brand logo:
- * New icon + wordmark side by side.
+ * Icon (desktop only) + wordmark text.
  */
 export default function Logo({ size = 'md', style = {}, onClick }) {
   const sizeStyles = {
-    sm: { fontSize: '1.3rem', imgSize: '28px' },
-    md: { fontSize: '1.65rem', imgSize: '36px' },
-    lg: { fontSize: '2.4rem', imgSize: '52px' },
-    xl: { fontSize: '3.2rem', imgSize: '68px' }
+    sm: { fontSize: '1.25rem', imgSize: '26px' },
+    md: { fontSize: '1.55rem', imgSize: '34px' },
+    lg: { fontSize: '2.2rem', imgSize: '48px' },
+    xl: { fontSize: '3.0rem', imgSize: '64px' }
   };
 
   const selected = typeof size === 'string' ? sizeStyles[size] || sizeStyles.md : { fontSize: `${size}px`, imgSize: `${size}px` };
@@ -29,6 +29,7 @@ export default function Logo({ size = 'md', style = {}, onClick }) {
       <img
         src="/logo.png"
         alt="Outreacio Logo"
+        className="brand-logo-icon"
         style={{
           width: selected.imgSize,
           height: selected.imgSize,
