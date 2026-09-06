@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { 
   Bold, Italic, Underline, List, ListOrdered, Link2, 
-  Heading1, Heading2, Quote, Eye, Edit3, Code2, Tag, Smartphone, Monitor, ArrowRight,
+  Heading1, Heading2, Quote, Eye, Edit3, Tag, Smartphone, Monitor, ArrowRight,
   Paperclip, FileText, X, AlertCircle
 } from 'lucide-react';
 
@@ -52,11 +52,7 @@ export default function EmailComposer({
     if (target === 'subject') {
       onSubjectChange((subject || '') + placeholder);
     } else {
-      if (activeView === 'html') {
-        onBodyHtmlChange(bodyHtml + placeholder);
-      } else {
-        formatDoc('insertText', placeholder);
-      }
+      formatDoc('insertText', placeholder);
     }
   };
 
@@ -154,22 +150,6 @@ export default function EmailComposer({
           >
             <Edit3 size={13} /> Visual Editor
           </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveView('html')}
-            className="btn btn-sm"
-            style={{
-              background: activeView === 'html' ? 'var(--bg-white)' : 'transparent',
-              color: activeView === 'html' ? 'var(--text-primary)' : 'var(--text-secondary)',
-              fontWeight: activeView === 'html' ? '700' : '500',
-              boxShadow: activeView === 'html' ? 'var(--shadow-subtle)' : 'none',
-              border: activeView === 'html' ? '1px solid var(--border)' : '1px solid transparent',
-              borderRadius: '7px'
-            }}
-          >
-            <Code2 size={13} /> Raw HTML
-          </button>
         </div>
       </div>
 
@@ -216,7 +196,7 @@ export default function EmailComposer({
         marginBottom: '20px'
       }}>
         {/* Editor Side */}
-        {(activeView === 'split' || activeView === 'editor' || activeView === 'html') && (
+        {(activeView === 'split' || activeView === 'editor') && (
           <div style={{ border: '1px solid var(--border)', borderRadius: '12px', overflow: 'hidden', background: 'var(--bg-surface)' }}>
             {/* Formatting Toolbar */}
             <div className="composer-toolbar" style={{
@@ -228,61 +208,36 @@ export default function EmailComposer({
               gap: '4px',
               alignItems: 'center'
             }}>
-              {activeView !== 'html' ? (
-                <>
-                  <button type="button" onClick={() => formatDoc('bold')} className="btn btn-sm btn-icon" title="Bold"><Bold size={14} /></button>
-                  <button type="button" onClick={() => formatDoc('italic')} className="btn btn-sm btn-icon" title="Italic"><Italic size={14} /></button>
-                  <button type="button" onClick={() => formatDoc('underline')} className="btn btn-sm btn-icon" title="Underline"><Underline size={14} /></button>
-                  <span style={{ width: '1px', height: '18px', background: 'var(--border)', margin: '0 4px' }} />
-                  <button type="button" onClick={() => formatDoc('insertUnorderedList')} className="btn btn-sm btn-icon" title="Bullet List"><List size={14} /></button>
-                  <button type="button" onClick={() => formatDoc('insertOrderedList')} className="btn btn-sm btn-icon" title="Numbered List"><ListOrdered size={14} /></button>
-                  <button type="button" onClick={handleInsertLink} className="btn btn-sm btn-icon" title="Insert Link"><Link2 size={14} /></button>
-                  <span style={{ width: '1px', height: '18px', background: 'var(--border)', margin: '0 4px' }} />
-                  <button type="button" onClick={() => handleInsertPlaceholder('{{Company Name}}', 'body')} className="btn btn-sm" style={{ fontSize: '11px', padding: '3px 8px' }}>
-                    +{'{{Company Name}}'}
-                  </button>
-                  <button type="button" onClick={() => handleInsertPlaceholder('{{Email}}', 'body')} className="btn btn-sm" style={{ fontSize: '11px', padding: '3px 8px' }}>
-                    +{'{{Email}}'}
-                  </button>
-                </>
-              ) : (
-                <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Raw HTML Editing Mode</span>
-              )}
+              <button type="button" onClick={() => formatDoc('bold')} className="btn btn-sm btn-icon" title="Bold"><Bold size={14} /></button>
+              <button type="button" onClick={() => formatDoc('italic')} className="btn btn-sm btn-icon" title="Italic"><Italic size={14} /></button>
+              <button type="button" onClick={() => formatDoc('underline')} className="btn btn-sm btn-icon" title="Underline"><Underline size={14} /></button>
+              <span style={{ width: '1px', height: '18px', background: 'var(--border)', margin: '0 4px' }} />
+              <button type="button" onClick={() => formatDoc('insertUnorderedList')} className="btn btn-sm btn-icon" title="Bullet List"><List size={14} /></button>
+              <button type="button" onClick={() => formatDoc('insertOrderedList')} className="btn btn-sm btn-icon" title="Numbered List"><ListOrdered size={14} /></button>
+              <button type="button" onClick={handleInsertLink} className="btn btn-sm btn-icon" title="Insert Link"><Link2 size={14} /></button>
+              <span style={{ width: '1px', height: '18px', background: 'var(--border)', margin: '0 4px' }} />
+              <button type="button" onClick={() => handleInsertPlaceholder('{{Company Name}}', 'body')} className="btn btn-sm" style={{ fontSize: '11px', padding: '3px 8px' }}>
+                +{'{{Company Name}}'}
+              </button>
+              <button type="button" onClick={() => handleInsertPlaceholder('{{Email}}', 'body')} className="btn btn-sm" style={{ fontSize: '11px', padding: '3px 8px' }}>
+                +{'{{Email}}'}
+              </button>
             </div>
 
             {/* Editable Content Area */}
-            {activeView === 'html' ? (
-              <textarea
-                value={bodyHtml}
-                onChange={(e) => onBodyHtmlChange(e.target.value)}
-                style={{
-                  width: '100%',
-                  minHeight: '260px',
-                  padding: '16px',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: '13px',
-                  border: 'none',
-                  outline: 'none',
-                  resize: 'vertical',
-                  background: 'var(--bg-white)',
-                  lineHeight: 1.5
-                }}
-              />
-            ) : (
-              <div
-                ref={editorRef}
-                contentEditable
-                onInput={(e) => onBodyHtmlChange(e.currentTarget.innerHTML)}
-                style={{
-                  minHeight: '260px',
-                  padding: '16px',
-                  outline: 'none',
-                  background: 'var(--bg-white)',
-                  fontSize: '14px',
-                  lineHeight: 1.6
-                }}
-              />
-            )}
+            <div
+              ref={editorRef}
+              contentEditable
+              onInput={(e) => onBodyHtmlChange(e.currentTarget.innerHTML)}
+              style={{
+                minHeight: '260px',
+                padding: '16px',
+                outline: 'none',
+                background: 'var(--bg-white)',
+                fontSize: '14px',
+                lineHeight: 1.6
+              }}
+            />
           </div>
         )}
 
