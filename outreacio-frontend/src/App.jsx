@@ -14,6 +14,7 @@ import CampaignHistory from './components/CampaignHistory';
 import LoginPage from './components/LoginPage';
 import PageTransitionLoader from './components/PageTransitionLoader';
 import AdminPaymentsPage from './components/AdminPaymentsPage';
+import NotFoundPage from './components/NotFoundPage';
 import { ThemeProvider } from './context/ThemeContext';
 import { supabase } from './supabaseClient';
 import './App.css';
@@ -112,10 +113,13 @@ export default function App() {
     if (path === '/pricing' || path.startsWith('/pricing/')) {
       return 'pricing';
     }
-    if (path === '/admin' || path.startsWith('/admin/')) {
+    if (path === '/8bytestudio' || path.startsWith('/8bytestudio/')) {
       return 'admin-payments';
     }
-    return 'landing'; // Default landing page for root /
+    if (path === '/' || path === '/landing' || path === '') {
+      return 'landing';
+    }
+    return 'notfound';
   };
 
   const [currentView, setCurrentView] = useState(getInitialView);
@@ -127,8 +131,8 @@ export default function App() {
   // Sync document title and clean browser URL without any # hash tags
   useEffect(() => {
     // Strip any lingering hash if present in URL
-    if (window.location.hash) {
-      const cleanPath = currentView === 'dashboard' ? '/dashboard' : (currentView === 'contact' ? '/contact' : (currentView === 'login' ? '/login' : (currentView === 'admin-payments' ? '/admin/payments' : '/')));
+    if (window.location.hash && currentView !== 'notfound') {
+      const cleanPath = currentView === 'dashboard' ? '/dashboard' : (currentView === 'contact' ? '/contact' : (currentView === 'login' ? '/login' : (currentView === 'pricing' ? '/pricing' : (currentView === 'admin-payments' ? '/8bytestudio' : '/'))));
       window.history.replaceState({ view: currentView }, '', cleanPath);
     }
 
@@ -147,11 +151,18 @@ export default function App() {
       if (!window.location.pathname.includes('/login')) {
         window.history.pushState({ view: 'login' }, '', '/login');
       }
+    } else if (currentView === 'pricing') {
+      document.title = 'Outreacio | Simple Transparent Pricing';
+      if (!window.location.pathname.includes('/pricing')) {
+        window.history.pushState({ view: 'pricing' }, '', '/pricing');
+      }
     } else if (currentView === 'admin-payments') {
       document.title = 'Outreacio | Admin Payment Verification';
-      if (!window.location.pathname.includes('/admin/payments')) {
-        window.history.pushState({ view: 'admin-payments' }, '', '/admin/payments');
+      if (!window.location.pathname.includes('/8bytestudio')) {
+        window.history.pushState({ view: 'admin-payments' }, '', '/8bytestudio');
       }
+    } else if (currentView === 'notfound') {
+      document.title = '404 - Page Not Found | Outreacio';
     } else {
       document.title = 'Outreacio | Campaign Dashboard';
       if (!window.location.pathname.includes('/dashboard')) {
@@ -172,10 +183,12 @@ export default function App() {
         setCurrentView('pricing');
       } else if (path.includes('contact')) {
         setCurrentView('contact');
-      } else if (path.includes('admin')) {
+      } else if (path.includes('8bytestudio')) {
         setCurrentView('admin-payments');
-      } else {
+      } else if (path === '/' || path === '/landing' || path === '') {
         setCurrentView('landing');
+      } else {
+        setCurrentView('notfound');
       }
     };
 
@@ -584,6 +597,13 @@ export default function App() {
 
             {currentView === 'admin-payments' && (
               <AdminPaymentsPage onNavigateHome={() => navigateToView('landing')} />
+            )}
+
+            {currentView === 'notfound' && (
+              <NotFoundPage 
+                onNavigateHome={() => navigateToView('landing')}
+                onNavigateContact={() => navigateToView('contact')}
+              />
             )}
 
             {(currentView === 'dashboard' || currentView === 'app') && (
