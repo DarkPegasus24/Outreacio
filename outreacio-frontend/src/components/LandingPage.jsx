@@ -749,41 +749,6 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
                   </svg>
                   <span>25 emails / day</span>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
-                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
-                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span>Smart Multi-Sheet Excel &amp; CSV parser</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
-                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
-                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span>Dynamic tags (&#123;&#123;Name&#125;&#125;, &#123;&#123;Company&#125;&#125;)</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
-                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
-                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span>Real-time delivery tracking &amp; logs</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
-                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
-                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span>Zero disk storage (Safe in-memory SMTP)</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-muted)' }}>
-                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0, opacity: 0.35 }}>
-                    <circle cx="8" cy="8" r="8" fill="var(--text-muted)" opacity="0.1" />
-                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--text-muted)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span style={{ opacity: 0.65 }}>Priority email dispatch &amp; faster rate</span>
-                </div>
               </div>
             </div>
 
@@ -889,7 +854,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
                     <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
                     <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  <span>Unlimited Connected Inboxes</span>
+                  <span>1 Connected Inbox (Gmail)</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
                   <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
@@ -897,41 +862,6 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
                     <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span>150 emails / day</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
-                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
-                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span>Smart Multi-Sheet Excel &amp; CSV parser</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
-                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
-                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span>Dynamic tags (&#123;&#123;Name&#125;&#125;, &#123;&#123;Company&#125;&#125;)</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
-                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
-                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span>Real-time delivery tracking &amp; logs</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
-                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
-                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span>Zero disk storage (Safe in-memory SMTP)</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
-                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
-                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                  <span>Priority email dispatch &amp; faster rate</span>
                 </div>
               </div>
             </div>
