@@ -1,4 +1,8 @@
 require('dotenv').config();
+const dns = require('dns');
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder('ipv4first');
+}
 const express = require('express');
 const nodemailer = require('nodemailer');
 const cors = require('cors');
@@ -343,15 +347,17 @@ function isValidEmail(email) {
 }
 
 // Helper to create Gmail Nodemailer transporter (Gmail-Only)
-function createGmailTransporter(user, pass) {
+function createGmailTransporter(user, pass, port = 465, secure = true) {
     return nodemailer.createTransport({
         host: 'smtp.gmail.com',
-        port: 465,
-        secure: true, // Direct SSL port 465 for maximum cloud compatibility
+        port,
+        secure,
+        requireTLS: !secure,
         auth: {
             user: user ? user.trim() : '',
             pass: pass ? pass.trim().replace(/\s+/g, '') : '' // Handles 16-char app passwords with or without spaces
         },
+        family: 4, // Force IPv4 to prevent hanging on IPv6 in Docker / Railway containers
         connectionTimeout: 8000,
         greetingTimeout: 7000,
         socketTimeout: 10000,
@@ -396,26 +402,39 @@ const handleVerifyGmail = async (req, res) => {
     }
 
     try {
-        const transporter = createGmailTransporter(user, pass);
-        // Run verify with a hard 9-second timeout safeguard to avoid 502 proxy timeouts
-        await Promise.race([
-            transporter.verify(),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('ETIMEDOUT_SAFEGUARD')), 8500))
-        ]);
+        let verified = false;
 
-        res.json({
-            success: true,
-            message: 'Gmail connection verified successfully!'
-        });
+        // Try Port 465 (SSL direct) first
+        try {
+            const t465 = createGmailTransporter(user, pass, 465, true);
+            await t465.verify();
+            verified = true;
+        } catch (err465) {
+            // If it is an authentication error (bad password), don't retry - fail immediately
+            if (err465.code === 'EAUTH' || err465.responseCode === 535) {
+                throw err465;
+            }
+            // If port 465 had a network issue, try port 587 (STARTTLS)
+            const t587 = createGmailTransporter(user, pass, 587, false);
+            await t587.verify();
+            verified = true;
+        }
+
+        if (verified) {
+            return res.json({
+                success: true,
+                message: 'Gmail connection verified successfully!'
+            });
+        }
     } catch (error) {
         let errorHint = error.message;
         if (error.code === 'EAUTH' || error.responseCode === 535) {
-            errorHint = 'Authentication failed. Please ensure 2-Step Verification is enabled in your Google Account and you are using a generated 16-character App Password (myaccount.google.com/apppasswords), NOT your normal Gmail password.';
-        } else if (error.code === 'ESOCKET' || error.code === 'ETIMEDOUT' || error.message === 'ETIMEDOUT_SAFEGUARD') {
-            errorHint = 'Connection to Gmail SMTP timed out. Please verify your App Password and try again.';
+            errorHint = 'Invalid credentials. Please ensure 2-Step Verification is ON in your Google Account and you generated a 16-character App Password at myaccount.google.com/apppasswords.';
+        } else if (error.code === 'ESOCKET' || error.code === 'ETIMEDOUT') {
+            errorHint = 'Connection to Gmail SMTP timed out. Please check your network or try again.';
         }
 
-        res.status(400).json({
+        return res.status(400).json({
             success: false,
             message: errorHint,
             rawError: error.message
