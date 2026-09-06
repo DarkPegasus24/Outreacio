@@ -76,7 +76,7 @@ export async function fetchPlans() {
       name: 'Paid Plan',
       priceMonthly: 4.99,
       priceInr: 425,
-      inboxLimit: null,
+      inboxLimit: 1,
       sendCapDaily: 150,
       aiCreditsMonthly: 3000,
       verificationCreditsMonthly: 5000,

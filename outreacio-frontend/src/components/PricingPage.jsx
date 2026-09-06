@@ -381,7 +381,7 @@ export default function PricingPage({ onUpgrade, onGetStarted, csrfToken }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '32px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
                 <WhiteCheckIcon />
-                <span>Unlimited Connected Inboxes</span>
+                <span>1 Connected Inbox (Gmail)</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
                 <WhiteCheckIcon />

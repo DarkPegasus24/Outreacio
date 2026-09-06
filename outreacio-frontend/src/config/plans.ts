@@ -50,7 +50,7 @@ export const plans: Record<string, Plan> = {
     name: 'Paid Plan',
     priceMonthly: 4.99,
     priceINR: 425, // INR equivalent (~₹425/mo at ₹85/$)
-    inboxLimit: null, // unlimited
+    inboxLimit: 1, // 1 connected Gmail inbox
     sendCapDaily: 150, // 150 emails / day
     aiCreditsMonthly: 0,
     verificationCreditsMonthly: 0,
