@@ -390,7 +390,16 @@ export default function App() {
         })
       });
 
-      const data = await response.json();
+      const data = await response.text().then(text => {
+        if (!text) {
+          throw new Error('Server sent an empty response. This usually means the backend was waking up (cold start) or restarted mid-request. Please wait a few seconds and try again.');
+        }
+        try {
+          return JSON.parse(text);
+        } catch (parseErr) {
+          throw new Error(`Server returned an unexpected response (status ${response.status}). Please try again in a moment.`);
+        }
+      });
       if (!response.ok || !data.success) {
         alert(`Failed to start campaign: ${data.error || data.message || 'Unknown error'}`);
         return;
