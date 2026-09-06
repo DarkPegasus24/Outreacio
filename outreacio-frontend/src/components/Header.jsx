@@ -65,7 +65,7 @@ export default function Header({
             />
             <path
               d="M 0 0 A 24 24 0 0 1 23.5 24.5"
-              stroke="#000000"
+              stroke="var(--navbar-border)"
               strokeWidth="0.9"
               fill="none"
               strokeLinecap="round"
@@ -82,7 +82,7 @@ export default function Header({
             />
             <path
               d="M 0.5 24.5 A 24 24 0 0 1 24 0"
-              stroke="#000000"
+              stroke="var(--navbar-border)"
               strokeWidth="0.9"
               fill="none"
               strokeLinecap="round"
@@ -129,6 +129,21 @@ export default function Header({
             Contact
           </button>
         </nav>
+
+        {/* Dark Mode Toggle — always visible */}
+        <button
+          type="button"
+          className="theme-toggle-btn"
+          onClick={toggleTheme}
+          title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          aria-label={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+        >
+          {theme === 'dark' ? (
+            <Sun size={16} className="theme-toggle-icon" />
+          ) : (
+            <Moon size={16} className="theme-toggle-icon" />
+          )}
+        </button>
 
         {/* User Authenticated Profile Dropdown (Parley Dark Aesthetic) */}
         {user ? (
