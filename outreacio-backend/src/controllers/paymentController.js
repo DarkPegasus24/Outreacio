@@ -40,14 +40,14 @@ const upload = multer({
 /**
  * Admin Authentication Middleware
  * Accepts either:
- * 1. An 'x-admin-key' header matching ADMIN_SECRET_KEY (default: 'outreacio-admin-2026')
+ * 1. An 'x-admin-key' header matching ADMIN_SECRET_KEY from environment variables (.env)
  * 2. A Supabase Auth token for an email in ADMIN_EMAILS
  */
 async function requireAdmin(req, res, next) {
-  const adminSecret = (process.env.ADMIN_SECRET_KEY || '8bytestudio').trim();
+  const adminSecret = (process.env.ADMIN_SECRET_KEY || '').trim();
   const providedKey = (req.headers['x-admin-key'] || '').trim();
 
-  if (providedKey && (providedKey === adminSecret || providedKey === '8bytestudio')) {
+  if (adminSecret && providedKey && providedKey === adminSecret) {
     req.adminIdentifier = 'admin-key';
     return next();
   }

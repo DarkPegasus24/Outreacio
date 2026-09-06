@@ -345,11 +345,16 @@ function isValidEmail(email) {
 // Helper to create Gmail Nodemailer transporter (Gmail-Only)
 function createGmailTransporter(user, pass) {
     return nodemailer.createTransport({
-        service: 'gmail',
+        host: 'smtp.gmail.com',
+        port: 465,
+        secure: true, // Direct SSL port 465 for maximum cloud compatibility
         auth: {
             user: user ? user.trim() : '',
             pass: pass ? pass.trim().replace(/\s+/g, '') : '' // Handles 16-char app passwords with or without spaces
         },
+        connectionTimeout: 8000,
+        greetingTimeout: 7000,
+        socketTimeout: 10000,
         tls: {
             rejectUnauthorized: false
         }
@@ -392,7 +397,12 @@ const handleVerifyGmail = async (req, res) => {
 
     try {
         const transporter = createGmailTransporter(user, pass);
-        await transporter.verify();
+        // Run verify with a hard 9-second timeout safeguard to avoid 502 proxy timeouts
+        await Promise.race([
+            transporter.verify(),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('ETIMEDOUT_SAFEGUARD')), 8500))
+        ]);
+
         res.json({
             success: true,
             message: 'Gmail connection verified successfully!'
@@ -401,8 +411,8 @@ const handleVerifyGmail = async (req, res) => {
         let errorHint = error.message;
         if (error.code === 'EAUTH' || error.responseCode === 535) {
             errorHint = 'Authentication failed. Please ensure 2-Step Verification is enabled in your Google Account and you are using a generated 16-character App Password (myaccount.google.com/apppasswords), NOT your normal Gmail password.';
-        } else if (error.code === 'ESOCKET' || error.code === 'ETIMEDOUT') {
-            errorHint = 'Connection timed out while reaching Gmail SMTP servers. Please check your internet connection and firewall settings.';
+        } else if (error.code === 'ESOCKET' || error.code === 'ETIMEDOUT' || error.message === 'ETIMEDOUT_SAFEGUARD') {
+            errorHint = 'Connection to Gmail SMTP timed out. Please verify your App Password and try again.';
         }
 
         res.status(400).json({

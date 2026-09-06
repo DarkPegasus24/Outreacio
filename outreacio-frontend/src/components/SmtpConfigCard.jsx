@@ -50,7 +50,13 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
         })
       });
 
-      const data = await response.json();
+      let data = {};
+      try {
+        data = await response.json();
+      } catch (jsonErr) {
+        data = { message: response.status === 502 ? 'Connection to backend timed out. Please try again.' : `Server returned status ${response.status}` };
+      }
+
       if (response.ok && data.success) {
         setTestResult({
           success: true,
@@ -65,7 +71,7 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
       } else {
         setTestResult({
           success: false,
-          message: data.message || 'Gmail login failed. Please check your App Password.'
+          message: data.message || 'Gmail verification failed. Please check your 16-character App Password.'
         });
         onVerifiedChange?.(false);
       }
