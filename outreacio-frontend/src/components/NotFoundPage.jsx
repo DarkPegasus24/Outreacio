@@ -1,9 +1,7 @@
 import React from 'react';
-import { Home, ArrowLeft, Search, HelpCircle, Compass } from 'lucide-react';
+import { Home, HelpCircle, Compass } from 'lucide-react';
 
 export default function NotFoundPage({ onNavigateHome, onNavigateContact }) {
-  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '';
-
   return (
     <div style={{
       minHeight: '75vh',
@@ -85,40 +83,11 @@ export default function NotFoundPage({ onNavigateHome, onNavigateContact }) {
           fontSize: '14.5px',
           color: 'var(--text-secondary)',
           lineHeight: 1.6,
-          margin: '0 auto 20px',
+          margin: '0 auto 32px',
           maxWidth: '420px'
         }}>
           The page you are looking for doesn't exist, was moved, or has an invalid route address.
         </p>
-
-        {/* Path Display */}
-        {currentPath && (
-          <div style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            background: 'var(--bg-surface, #f9fafb)',
-            padding: '6px 14px',
-            borderRadius: '10px',
-            border: '1px solid var(--border)',
-            marginBottom: '32px',
-            fontSize: '12.5px',
-            color: 'var(--text-muted)'
-          }}>
-            <Search size={13} />
-            <span>Requested Route:</span>
-            <code style={{
-              fontFamily: 'monospace',
-              fontWeight: '700',
-              color: 'var(--accent, #f48d16)',
-              background: 'rgba(244, 141, 22, 0.08)',
-              padding: '2px 6px',
-              borderRadius: '6px'
-            }}>
-              {currentPath}
-            </code>
-          </div>
-        )}
 
         {/* Action Buttons */}
         <div style={{
