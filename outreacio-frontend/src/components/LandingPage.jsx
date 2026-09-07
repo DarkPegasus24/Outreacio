@@ -8,15 +8,18 @@ import {
 import FaqSection from './FaqSection';
 import CtaBannerSection from './CtaBannerSection';
 import PlanCard from './PlanCard';
+import UpgradeModal from './UpgradeModal';
 import { fetchPlans } from '../api/planService.js';
 import { SkeletonPlansGrid } from './SkeletonLoader';
 
-export default function LandingPage({ onLaunchApp, onNavigateContact }) {
+export default function LandingPage({ onLaunchApp, onNavigateContact, onRequireAuth, user, csrfToken }) {
   const [activeKpi, setActiveKpi] = useState(0);
   const [activeStep, setActiveStep] = useState(0);
   const [currency, setCurrency] = useState('USD'); // 'USD' | 'INR'
   const [plans, setPlans] = useState({});
   const [plansLoading, setPlansLoading] = useState(true);
+  const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
+  const [toast, setToast] = useState('');
 
   useEffect(() => {
     fetchPlans()
@@ -24,6 +27,18 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
       .catch(err => console.error('Failed to load plans on landing page', err))
       .finally(() => setPlansLoading(false));
   }, []);
+
+  const handleUpgradeClick = () => {
+    if (!user) {
+      if (onRequireAuth) {
+        onRequireAuth();
+      } else if (onLaunchApp) {
+        onLaunchApp();
+      }
+      return;
+    }
+    setUpgradeModalOpen(true);
+  };
 
   // 4 Real Working Benefit Cards (Why Outreacio)
   const kpis = [
@@ -680,19 +695,9 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
         </div>
 
         {/* 2 Plans Grid */}
-        <div style={{
-          display: 'flex',
-          gap: '28px',
-          justifyContent: 'center',
-          alignItems: 'stretch',
-          flexWrap: 'wrap',
-          marginBottom: '32px'
-        }}>
+        <div className="pricing-cards-grid">
           {/* Card 1: FREE TIER */}
           <div style={{
-            flex: '1 1 320px',
-            maxWidth: '390px',
-            minWidth: '290px',
             background: 'var(--bg-white)',
             border: '1.5px solid var(--border)',
             borderRadius: '24px',
@@ -783,9 +788,6 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
 
           {/* Card 2: PAID PLAN (Most Popular) */}
           <div style={{
-            flex: '1 1 320px',
-            maxWidth: '390px',
-            minWidth: '290px',
             position: 'relative',
             background: 'linear-gradient(145deg, #f48d16 0%, #e07d0a 100%)',
             borderRadius: '24px',
@@ -868,7 +870,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
 
             <button
               type="button"
-              onClick={onLaunchApp}
+              onClick={handleUpgradeClick}
               style={{
                 width: '100%',
                 padding: '13px',
@@ -974,6 +976,31 @@ export default function LandingPage({ onLaunchApp, onNavigateContact }) {
 
       {/* 7. Reusable Final CTA Banner Section */}
       <CtaBannerSection onLaunchApp={onLaunchApp} />
+
+      {/* Upgrade Modal */}
+      <UpgradeModal
+        isOpen={upgradeModalOpen}
+        onClose={() => setUpgradeModalOpen(false)}
+        currentPlanId={null}
+        plans={plans}
+        csrfToken={csrfToken || ''}
+        onUpgradeSuccess={(res) => {
+          setToast(`🎉 ${res?.message || 'Payment submitted for review'}`);
+          setTimeout(() => setToast(''), 4000);
+        }}
+      />
+
+      {toast && (
+        <div style={{
+          position: 'fixed', bottom: '28px', left: '50%', transform: 'translateX(-50%)',
+          background: 'linear-gradient(90deg, #22c55e, #16a34a)',
+          color: '#fff', padding: '14px 28px', borderRadius: '14px',
+          fontWeight: '700', fontSize: '15px', boxShadow: '0 8px 32px rgba(34,197,94,0.4)',
+          zIndex: 9999, whiteSpace: 'nowrap', animation: 'slideUp 0.3s ease',
+        }}>
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

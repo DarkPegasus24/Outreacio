@@ -82,6 +82,8 @@ export default function App() {
       infinite: false,
     });
 
+    window.__lenis = lenis;
+
     function raf(time) {
       lenis.raf(time);
       requestAnimationFrame(raf);
@@ -91,6 +93,7 @@ export default function App() {
 
     return () => {
       cancelAnimationFrame(animId);
+      window.__lenis = null;
       lenis.destroy();
     };
   }, []);
@@ -197,11 +200,22 @@ export default function App() {
   }, []);
 
   const navigateToView = (view) => {
-    if (view === currentView) return;
+    if (view === currentView) {
+      if (window.__lenis) {
+        window.__lenis.scrollTo(0, { duration: 1.0 });
+      } else {
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      }
+      return;
+    }
 
     setIsTransitioning(false);
     setCurrentView(view);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.__lenis) {
+      window.__lenis.scrollTo(0, { duration: 0.8, immediate: false });
+    } else {
+      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+    }
   };
 
   const handleLaunchApp = () => {
@@ -585,6 +599,9 @@ export default function App() {
               <LandingPage 
                 onLaunchApp={handleLaunchApp} 
                 onNavigateContact={() => navigateToView('contact')}
+                user={user}
+                csrfToken={csrfToken}
+                onRequireAuth={() => navigateToView('login')}
               />
             )}
 
