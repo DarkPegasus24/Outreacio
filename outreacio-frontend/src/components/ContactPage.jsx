@@ -207,7 +207,16 @@ export default function ContactPage({ onLaunchApp }) {
       </section>
 
       {/* 2. Reusable FAQ Section */}
-      <FaqSection onLaunchApp={onLaunchApp} />
+      <FaqSection 
+        onLaunchApp={onLaunchApp} 
+        onOpenContactForm={() => {
+          if (window.__lenis) {
+            window.__lenis.scrollTo(0, { duration: 1.2 });
+          } else {
+            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+          }
+        }}
+      />
 
       {/* 3. Reusable Final CTA Banner Section */}
       <CtaBannerSection onLaunchApp={onLaunchApp} />

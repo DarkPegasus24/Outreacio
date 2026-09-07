@@ -26,6 +26,18 @@ export default function FaqSection({ onLaunchApp, onOpenContactForm }) {
     }
   ];
 
+  const handleChatClick = () => {
+    if (onOpenContactForm) {
+      onOpenContactForm();
+    } else {
+      if (window.__lenis) {
+        window.__lenis.scrollTo(0, { duration: 1.2 });
+      } else {
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      }
+    }
+  };
+
   return (
     <section id="faq" style={{ padding: '40px 0 20px' }}>
       <div className="parley-faq-wrapper">
@@ -53,7 +65,8 @@ export default function FaqSection({ onLaunchApp, onOpenContactForm }) {
           </div>
 
           <button
-            onClick={onOpenContactForm || onLaunchApp}
+            type="button"
+            onClick={handleChatClick}
             className="parley-chat-btn"
             style={{ marginBottom: '40px' }}
           >

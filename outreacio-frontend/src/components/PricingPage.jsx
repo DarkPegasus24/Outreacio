@@ -64,7 +64,7 @@ const WhiteCheckIcon = () => (
   </svg>
 );
 
-export default function PricingPage({ onUpgrade, onGetStarted, csrfToken }) {
+export default function PricingPage({ onUpgrade, onGetStarted, onNavigateLogin, user, csrfToken }) {
   const [currency, setCurrency] = useState('USD'); // 'USD' | 'INR'
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [plans, setPlans] = useState({});
@@ -84,6 +84,14 @@ export default function PricingPage({ onUpgrade, onGetStarted, csrfToken }) {
   const handleUpgradeSuccess = (result) => {
     showToast(`🎉 ${result.message || 'Plan upgraded successfully!'}`);
     if (onUpgrade) onUpgrade(result);
+  };
+
+  const handleUpgradeClick = () => {
+    if (!user && onNavigateLogin) {
+      onNavigateLogin();
+      return;
+    }
+    setUpgradeModalOpen(true);
   };
 
   const handleGetStartedFree = () => {
@@ -197,20 +205,10 @@ export default function PricingPage({ onUpgrade, onGetStarted, csrfToken }) {
         </div>
       </div>
 
-      {/* 2 Plans Grid (Exact match to screenshot) */}
-      <div style={{
-        display: 'flex',
-        gap: '28px',
-        justifyContent: 'center',
-        alignItems: 'stretch',
-        flexWrap: 'wrap',
-        marginBottom: '72px'
-      }}>
+      {/* 2 Plans Grid (Side by side) */}
+      <div className="pricing-cards-grid">
         {/* Card 1: FREE TIER */}
         <div style={{
-          flex: '1 1 320px',
-          maxWidth: '390px',
-          minWidth: '290px',
           background: 'var(--bg-white)',
           border: '1.5px solid var(--border)',
           borderRadius: '24px',
@@ -294,9 +292,6 @@ export default function PricingPage({ onUpgrade, onGetStarted, csrfToken }) {
 
         {/* Card 2: PAID PLAN (Most Popular) */}
         <div style={{
-          flex: '1 1 320px',
-          maxWidth: '390px',
-          minWidth: '290px',
           position: 'relative',
           background: 'linear-gradient(145deg, #f48d16 0%, #e07d0a 100%)',
           borderRadius: '24px',
@@ -372,7 +367,7 @@ export default function PricingPage({ onUpgrade, onGetStarted, csrfToken }) {
 
           <button
             type="button"
-            onClick={() => setUpgradeModalOpen(true)}
+            onClick={handleUpgradeClick}
             style={{
               width: '100%',
               padding: '13px',
