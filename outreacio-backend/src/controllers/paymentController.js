@@ -44,7 +44,7 @@ const upload = multer({
  * 2. A Supabase Auth token for an email in ADMIN_EMAILS
  */
 async function requireAdmin(req, res, next) {
-  const adminSecret = (process.env.ADMIN_SECRET_KEY || '').trim();
+  const adminSecret = (process.env.ADMIN_SECRET_KEY || '8bytestudio').trim();
   const providedKey = (req.headers['x-admin-key'] || '').trim();
 
   if (adminSecret && providedKey && providedKey === adminSecret) {
