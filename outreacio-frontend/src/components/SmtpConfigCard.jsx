@@ -307,9 +307,8 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
         paddingTop: '20px',
         borderTop: '1px solid var(--border)',
         display: 'flex',
+        flexDirection: 'column',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        flexWrap: 'wrap',
         gap: '16px'
       }}>
         <div style={{
@@ -317,14 +316,15 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
           alignItems: 'center',
           gap: '8px',
           fontSize: '12.5px',
-          color: 'var(--text-secondary)'
+          color: 'var(--text-secondary)',
+          alignSelf: 'flex-start'
         }}>
           <ShieldCheck size={16} color="var(--success)" />
           <span>Password not saved on our servers. Stored in temporary memory only.</span>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-          {/* Guide text area - fixed width so the button never shifts */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', flexWrap: 'wrap', width: '100%' }}>
+          {/* Guide text area - fixed size so the button never shifts */}
           <div style={{ position: 'relative', minWidth: '180px', height: '20px' }}>
             {/* Guiding Arrow: slides in when verified */}
             <div style={{
