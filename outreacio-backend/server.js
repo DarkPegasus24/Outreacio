@@ -71,9 +71,54 @@ const PLANS = {
     }
   }
 };
+
+let currentUsdToInrRate = 85;
+let lastExchangeRateSync = null;
+
+async function updateUsdToInrRate() {
+  try {
+    const urls = [
+      'https://api.exchangerate-api.com/v4/latest/USD',
+      'https://open.er-api.com/v6/latest/USD'
+    ];
+    let fetchedRate = null;
+    for (const url of urls) {
+      try {
+        const res = await fetch(url);
+        if (res.ok) {
+          const data = await res.json();
+          const rate = data?.rates?.INR;
+          if (typeof rate === 'number' && rate > 50 && rate < 200) {
+            fetchedRate = rate;
+            break;
+          }
+        }
+      } catch (_) {}
+    }
+
+    if (fetchedRate) {
+      currentUsdToInrRate = fetchedRate;
+      lastExchangeRateSync = new Date().toISOString();
+      const newInr = Math.round(4.99 * fetchedRate);
+      PLANS.pro.priceINR = newInr;
+      PLANS.pro.priceInr = newInr;
+      console.log(`[ExchangeRate] Daily update: 1 USD = ₹${fetchedRate.toFixed(2)}, $4.99 Plan = ₹${newInr} (synced at ${lastExchangeRateSync})`);
+    }
+  } catch (err) {
+    console.error('[ExchangeRate] Failed to update USD/INR rate:', err.message);
+  }
+}
+
+// Initial sync on startup
+updateUsdToInrRate();
+
 // Endpoint to expose plan definitions to frontend
 app.get('/api/plans', (req, res) => {
-  res.json({ plans: PLANS });
+  res.json({
+    plans: PLANS,
+    usdToInrRate: currentUsdToInrRate,
+    lastExchangeRateSync
+  });
 });
 
 // ==== Manual UPI Payment Bridge (Collection, Verification & Admin) ====
@@ -252,7 +297,8 @@ const cron = require('node-cron');
 
 // Daily reset: sends only (midnight UTC)
 cron.schedule('0 0 * * *', async () => {
-  console.log('[Cron] Daily send count reset at', new Date().toISOString());
+  console.log('[Cron] Daily send count reset & exchange rate update at', new Date().toISOString());
+  await updateUsdToInrRate();
   const { error } = await supabase
     .from('users')
     .update({ send_today_count: 0 });
