@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import PlanCard from './PlanCard';
 import { submitUpiPaymentProof, upgradePlan } from '../api/planService.js';
+import useExchangeRate from '../hooks/useExchangeRate.js';
 import { X, ArrowLeft, UploadCloud, CheckCircle2, AlertCircle, Loader2, FileText, Sparkles, Clock } from 'lucide-react';
 
 export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans = {}, initialPlanKey = 'pro', csrfToken, onUpgradeSuccess }) {
+  const { paidPlanInrPrice, inrRate } = useExchangeRate();
   const [step, setStep] = useState('payment'); // 'plans' | 'payment' | 'pending' | 'free_success'
   const [selectedPlanKey, setSelectedPlanKey] = useState(initialPlanKey || 'pro');
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -23,7 +25,7 @@ export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans = {
       const plan = plans[planKey] || {
         name: 'Paid Plan',
         priceMonthly: 4.99,
-        priceINR: 425,
+        priceINR: paidPlanInrPrice || 425,
       };
 
       setSelectedPlanKey(planKey);
@@ -265,7 +267,7 @@ export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans = {
                   gap: '6px'
                 }}>
                   <span style={{ color: 'var(--accent, #f48d16)', fontWeight: '900' }}>✓</span>
-                  <span>Amount: <strong>${selectedPlan.priceMonthly} USD</strong> / <strong>₹{selectedPlan.priceINR || Math.round(selectedPlan.priceMonthly * 85)} INR</strong></span>
+                  <span>Amount: <strong>${selectedPlan.priceMonthly} USD</strong> / <strong>₹{selectedPlan.priceMonthly === 4.99 ? paidPlanInrPrice : (selectedPlan.priceINR || Math.round(selectedPlan.priceMonthly * inrRate))} INR</strong></span>
                   <span style={{ opacity: 0.5 }}>•</span>
                   <span>Manual human verification</span>
                 </div>

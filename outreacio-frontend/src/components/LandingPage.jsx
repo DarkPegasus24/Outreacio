@@ -11,8 +11,10 @@ import PlanCard from './PlanCard';
 import UpgradeModal from './UpgradeModal';
 import { fetchPlans } from '../api/planService.js';
 import { SkeletonPlansGrid } from './SkeletonLoader';
+import { useExchangeRate } from '../hooks/useExchangeRate.js';
 
 export default function LandingPage({ onLaunchApp, onNavigateContact, onRequireAuth, user, csrfToken }) {
+  const { paidPlanInrPrice } = useExchangeRate();
   const [activeKpi, setActiveKpi] = useState(0);
   const [activeStep, setActiveStep] = useState(0);
   const [currency, setCurrency] = useState('USD'); // 'USD' | 'INR'
@@ -736,7 +738,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact, onRequireA
                 color: 'var(--text-secondary)',
                 margin: '0 0 28px'
               }}>
-                Free forever · No card needed
+                Free forever • No card needed
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '32px' }}>
@@ -753,6 +755,41 @@ export default function LandingPage({ onLaunchApp, onNavigateContact, onRequireA
                     <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span>25 emails / day</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Smart Multi-Sheet Excel & CSV parser</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Dynamic tags ({"{{Name}}"}, {"{{Company}}"})</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Real-time delivery tracking & logs</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="var(--accent, #f48d16)" opacity="0.18" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="var(--accent, #f48d16)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Zero disk storage (Safe in-memory SMTP)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-muted)' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="var(--text-muted)" opacity="0.18" />
+                    <path d="M5 5l6 6M11 5l-6 6" stroke="var(--text-muted)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Priority email dispatch & faster rate</span>
                 </div>
               </div>
             </div>
@@ -834,7 +871,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact, onRequireA
 
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '2px' }}>
                 <span style={{ fontSize: '42px', fontWeight: '900', color: '#ffffff', lineHeight: 1 }}>
-                  {currency === 'USD' ? '$4.99' : '₹425'}
+                  {currency === 'USD' ? '$4.99' : `₹${paidPlanInrPrice}`}
                 </span>
                 <span style={{ fontSize: '15px', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)' }}>
                   /mo
@@ -847,7 +884,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact, onRequireA
                 margin: '0 0 28px',
                 fontWeight: '500'
               }}>
-                {currency === 'USD' ? '~ ₹425 INR / month' : '~ $4.99 USD / month'}
+                {currency === 'USD' ? `≈ ₹${paidPlanInrPrice} INR / month` : '≈ $4.99 USD / month'}
               </p>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '32px' }}>
@@ -856,7 +893,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact, onRequireA
                     <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
                     <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
-                  <span>1 Connected Inbox (Gmail)</span>
+                  <span>Unlimited Connected Inboxes</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
                   <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
@@ -864,6 +901,41 @@ export default function LandingPage({ onLaunchApp, onNavigateContact, onRequireA
                     <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                   <span>150 emails / day</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Smart Multi-Sheet Excel & CSV parser</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Dynamic tags ({"{{Name}}"}, {"{{Company}}"})</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Real-time delivery tracking & logs</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Zero disk storage (Safe in-memory SMTP)</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+                    <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
+                    <path d="M4.5 8l2.5 2.5 4.5-5" stroke="#ffffff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  <span>Priority email dispatch & faster rate</span>
                 </div>
               </div>
             </div>

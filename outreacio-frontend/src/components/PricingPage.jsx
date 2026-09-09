@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import UpgradeModal from './UpgradeModal';
 import { fetchPlans } from '../api/planService.js';
+import { useExchangeRate } from '../hooks/useExchangeRate.js';
 
 const FAQ_ITEMS = [
   {
@@ -57,6 +58,13 @@ const CheckIcon = ({ dimmed = false }) => (
   </svg>
 );
 
+const CrossIcon = () => (
+  <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+    <circle cx="8" cy="8" r="8" fill="var(--text-muted)" opacity="0.18" />
+    <path d="M5 5l6 6M11 5l-6 6" stroke="var(--text-muted)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
 const WhiteCheckIcon = () => (
   <svg width="17" height="17" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
     <circle cx="8" cy="8" r="8" fill="#ffffff" opacity="0.25" />
@@ -65,6 +73,7 @@ const WhiteCheckIcon = () => (
 );
 
 export default function PricingPage({ onUpgrade, onGetStarted, onNavigateLogin, user, csrfToken }) {
+  const { paidPlanInrPrice } = useExchangeRate();
   const [currency, setCurrency] = useState('USD'); // 'USD' | 'INR'
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
   const [plans, setPlans] = useState({});
@@ -246,7 +255,7 @@ export default function PricingPage({ onUpgrade, onGetStarted, onNavigateLogin, 
               color: 'var(--text-secondary)',
               margin: '0 0 28px'
             }}>
-              Free forever · No card needed
+              Free forever • No card needed
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '32px' }}>
@@ -257,6 +266,26 @@ export default function PricingPage({ onUpgrade, onGetStarted, onNavigateLogin, 
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
                 <CheckIcon />
                 <span>25 emails / day</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                <CheckIcon />
+                <span>Smart Multi-Sheet Excel & CSV parser</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                <CheckIcon />
+                <span>Dynamic tags ({"{{Name}}"}, {"{{Company}}"})</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                <CheckIcon />
+                <span>Real-time delivery tracking & logs</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-primary)' }}>
+                <CheckIcon />
+                <span>Zero disk storage (Safe in-memory SMTP)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: 'var(--text-muted)' }}>
+                <CrossIcon />
+                <span>Priority email dispatch & faster rate</span>
               </div>
             </div>
           </div>
@@ -337,7 +366,7 @@ export default function PricingPage({ onUpgrade, onGetStarted, onNavigateLogin, 
 
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '2px' }}>
               <span style={{ fontSize: '42px', fontWeight: '900', color: '#ffffff', lineHeight: 1 }}>
-                {currency === 'USD' ? '$4.99' : '₹425'}
+                {currency === 'USD' ? '$4.99' : `₹${paidPlanInrPrice}`}
               </span>
               <span style={{ fontSize: '15px', fontWeight: '600', color: 'rgba(255, 255, 255, 0.8)' }}>
                 /mo
@@ -350,17 +379,37 @@ export default function PricingPage({ onUpgrade, onGetStarted, onNavigateLogin, 
               margin: '0 0 28px',
               fontWeight: '500'
             }}>
-              {currency === 'USD' ? '~ ₹425 INR / month' : '~ $4.99 USD / month'}
+              {currency === 'USD' ? `≈ ₹${paidPlanInrPrice} INR / month` : '≈ $4.99 USD / month'}
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '32px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
                 <WhiteCheckIcon />
-                <span>1 Connected Inbox (Gmail)</span>
+                <span>Unlimited Connected Inboxes</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
                 <WhiteCheckIcon />
                 <span>150 emails / day</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                <WhiteCheckIcon />
+                <span>Smart Multi-Sheet Excel & CSV parser</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                <WhiteCheckIcon />
+                <span>Dynamic tags ({"{{Name}}"}, {"{{Company}}"})</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                <WhiteCheckIcon />
+                <span>Real-time delivery tracking & logs</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                <WhiteCheckIcon />
+                <span>Zero disk storage (Safe in-memory SMTP)</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', color: '#ffffff' }}>
+                <WhiteCheckIcon />
+                <span>Priority email dispatch & faster rate</span>
               </div>
             </div>
           </div>

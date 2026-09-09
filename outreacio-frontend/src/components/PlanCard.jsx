@@ -1,4 +1,5 @@
 import React from 'react';
+import { useExchangeRate } from '../hooks/useExchangeRate.js';
 
 /*
 // COMMENTED OUT: Service limited to dedicated email delivery service
@@ -39,6 +40,9 @@ export default function PlanCard({
     inboxLimit = null,
     sendCapDaily = null
   } = plan;
+
+  const { paidPlanInrPrice } = useExchangeRate();
+  const finalPriceINR = priceMonthly === 4.99 ? paidPlanInrPrice : (priceINR || 425);
 
   const isFree = priceMonthly === 0;
 
@@ -87,13 +91,13 @@ export default function PlanCard({
   // Price formatting based on currency
   const displayPrice = isFree
     ? (currency === 'INR' ? '₹0' : 'Free')
-    : (currency === 'INR' ? `₹${priceINR || 425}` : `$${priceMonthly}`);
+    : (currency === 'INR' ? `₹${finalPriceINR}` : `$${priceMonthly}`);
 
   const conversionNote = isFree
     ? 'Free forever • No card needed'
     : currency === 'INR'
       ? `≈ $${priceMonthly} USD / month`
-      : `≈ ₹${priceINR || 425} INR / month`;
+      : `≈ ₹${finalPriceINR} INR / month`;
 
   return (
     <div style={{
