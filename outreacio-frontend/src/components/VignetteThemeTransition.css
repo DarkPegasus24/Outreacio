@@ -1,0 +1,189 @@
+/* ===========================================================================
+   LIQUID GLASS THEME WASH
+   A full-viewport colour wash: no iris, no circular mask, no content-shaped
+   overlay. It only animates opacity and transforms, so the browser can keep it
+   on the compositor instead of repainting an expensive full-screen blur.
+   =========================================================================== */
+
+.vignette-theme-overlay {
+  --wash-base: #f7f7f4;
+  --wash-glow: rgba(244, 141, 22, 0.18);
+  --wash-highlight: rgba(255, 255, 255, 0.58);
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  overflow: hidden;
+  pointer-events: none;
+  isolation: isolate;
+  contain: strict;
+  background: transparent;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+.vignette-theme-overlay.target-dark {
+  --wash-base: #18191a;
+  --wash-glow: rgba(244, 141, 22, 0.48);
+  --wash-highlight: rgba(255, 241, 221, 0.18);
+}
+
+.vignette-theme-overlay.target-light {
+  --wash-glow: rgba(244, 141, 22, 0.34);
+  --wash-highlight: rgba(255, 255, 255, 0.72);
+}
+
+/* Kept separate from the moving fields so their colour remains visible while
+   the opaque base layer is still gathering across the screen. */
+.liquid-theme-base {
+  position: absolute;
+  inset: 0;
+  background: var(--wash-base);
+  opacity: 0;
+  will-change: opacity;
+}
+
+/* Two oversized, heavily feathered colour fields keep the wash organic
+   without ever exposing a hard-edged circle over the page. */
+.liquid-theme-flow,
+.liquid-theme-sheen {
+  position: absolute;
+  pointer-events: none;
+  will-change: transform, opacity;
+  transform: translate3d(0, 0, 0);
+}
+
+.liquid-theme-flow {
+  width: 120vw;
+  height: 100vh;
+  border-radius: 42% 58% 54% 46% / 48% 42% 58% 52%;
+  opacity: 0;
+}
+
+.liquid-theme-flow-primary {
+  top: -46vh;
+  left: -58vw;
+  background:
+    radial-gradient(ellipse at 66% 68%, var(--wash-highlight) 0 13%, transparent 47%),
+    radial-gradient(ellipse at 75% 60%, var(--wash-glow) 0 8%, transparent 42%);
+}
+
+.liquid-theme-flow-secondary {
+  right: -58vw;
+  bottom: -46vh;
+  background:
+    radial-gradient(ellipse at 34% 33%, var(--wash-glow) 0 10%, transparent 43%),
+    radial-gradient(ellipse at 27% 42%, var(--wash-highlight) 0 11%, transparent 48%);
+}
+
+.liquid-theme-sheen {
+  inset: -35%;
+  opacity: 0;
+  background: linear-gradient(
+    112deg,
+    transparent 32%,
+    var(--wash-highlight) 48%,
+    transparent 64%
+  );
+  transform: translate3d(-38%, 20%, 0) skewX(-12deg);
+}
+
+/* The wash gains opacity as the app behind it gently blurs, then becomes a
+   solid colour before data-theme changes. This prevents a flash of raw tokens. */
+.vignette-theme-overlay.stage-in .liquid-theme-base {
+  animation: liquidWashIn 0.52s cubic-bezier(0.45, 0, 0.15, 1) forwards;
+}
+
+.vignette-theme-overlay.stage-in .liquid-theme-flow-primary {
+  animation: liquidFlowPrimaryIn 0.52s cubic-bezier(0.22, 0.8, 0.22, 1) forwards;
+}
+
+.vignette-theme-overlay.stage-in .liquid-theme-flow-secondary {
+  animation: liquidFlowSecondaryIn 0.52s cubic-bezier(0.22, 0.8, 0.22, 1) forwards;
+}
+
+.vignette-theme-overlay.stage-in .liquid-theme-sheen {
+  animation: liquidSheenIn 0.52s cubic-bezier(0.22, 0.8, 0.22, 1) forwards;
+}
+
+.vignette-theme-overlay.stage-hold .liquid-theme-base {
+  opacity: 1;
+}
+
+.vignette-theme-overlay.stage-hold .liquid-theme-flow {
+  opacity: 0.76;
+}
+
+.vignette-theme-overlay.stage-hold .liquid-theme-sheen {
+  opacity: 0.14;
+}
+
+/* The new palette comes back into focus through the same moving wash instead
+   of being revealed by a geometric mask. */
+.vignette-theme-overlay.stage-out .liquid-theme-base {
+  animation: liquidWashOut 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.vignette-theme-overlay.stage-out .liquid-theme-flow-primary {
+  animation: liquidFlowPrimaryOut 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.vignette-theme-overlay.stage-out .liquid-theme-flow-secondary {
+  animation: liquidFlowSecondaryOut 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.vignette-theme-overlay.stage-out .liquid-theme-sheen {
+  animation: liquidSheenOut 0.56s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+@keyframes liquidWashIn {
+  0% { opacity: 0; }
+  44% { opacity: 0.54; }
+  100% { opacity: 1; }
+}
+
+@keyframes liquidWashOut {
+  0% { opacity: 1; }
+  56% { opacity: 0.52; }
+  100% { opacity: 0; }
+}
+
+@keyframes liquidFlowPrimaryIn {
+  from { opacity: 0; transform: translate3d(-16%, -8%, 0) rotate(-10deg) scale(0.9); }
+  to { opacity: 0.76; transform: translate3d(26%, 12%, 0) rotate(8deg) scale(1.12); }
+}
+
+@keyframes liquidFlowSecondaryIn {
+  from { opacity: 0; transform: translate3d(18%, 10%, 0) rotate(12deg) scale(0.9); }
+  to { opacity: 0.66; transform: translate3d(-22%, -14%, 0) rotate(-8deg) scale(1.12); }
+}
+
+@keyframes liquidSheenIn {
+  from { opacity: 0; transform: translate3d(-42%, 22%, 0) skewX(-12deg); }
+  58% { opacity: 0.24; }
+  to { opacity: 0.1; transform: translate3d(18%, -12%, 0) skewX(-12deg); }
+}
+
+@keyframes liquidFlowPrimaryOut {
+  from { opacity: 0.76; transform: translate3d(26%, 12%, 0) rotate(8deg) scale(1.12); }
+  to { opacity: 0; transform: translate3d(58%, 30%, 0) rotate(18deg) scale(1.25); }
+}
+
+@keyframes liquidFlowSecondaryOut {
+  from { opacity: 0.66; transform: translate3d(-22%, -14%, 0) rotate(-8deg) scale(1.12); }
+  to { opacity: 0; transform: translate3d(-54%, -34%, 0) rotate(-18deg) scale(1.25); }
+}
+
+@keyframes liquidSheenOut {
+  from { opacity: 0.14; transform: translate3d(18%, -12%, 0) skewX(-12deg); }
+  to { opacity: 0; transform: translate3d(56%, -34%, 0) skewX(-12deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .vignette-theme-overlay,
+  .vignette-theme-overlay *,
+  .vignette-theme-overlay.stage-in .liquid-theme-base,
+  .vignette-theme-overlay.stage-out .liquid-theme-base {
+    animation: none !important;
+    transition: none !important;
+  }
+}

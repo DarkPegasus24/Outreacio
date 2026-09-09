@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import VignetteThemeTransition from '../components/VignetteThemeTransition';
 
 const ThemeContext = createContext();
 
@@ -8,6 +9,9 @@ export function ThemeProvider({ children, user }) {
     return localStorage.getItem('outreacio-theme') || 'light';
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [transitionStage, setTransitionStage] = useState('idle'); // 'idle' | 'in' | 'hold' | 'out'
+  const [targetTheme, setTargetTheme] = useState(null);
 
   // On mount / user change, sync data-theme attribute
   useEffect(() => {
@@ -25,15 +29,50 @@ export function ThemeProvider({ children, user }) {
   }, [user]);
 
   const toggleTheme = () => {
-    const newTheme = theme === 'light' ? 'dark' : 'light';
-    setTheme(newTheme);
-    localStorage.setItem('outreacio-theme', newTheme);
-    document.documentElement.setAttribute('data-theme', newTheme);
+    if (isTransitioning) return; // Prevent double-triggering
+
+    const nextTheme = theme === 'light' ? 'dark' : 'light';
+    setTargetTheme(nextTheme);
+    setIsTransitioning(true);
+    setTransitionStage('in');
+
+    // Let the liquid wash completely cover the current palette before swapping it.
+    setTimeout(() => {
+      // Stage 2: Center is completely sealed, swap theme tokens instantly underneath
+      setTransitionStage('hold');
+      setTheme(nextTheme);
+      localStorage.setItem('outreacio-theme', nextTheme);
+      document.documentElement.setAttribute('data-theme', nextTheme);
+
+      // Give the new palette a tiny beat before dissolving the wash away.
+      setTimeout(() => {
+        setTransitionStage('out');
+
+        // Stage 4: Reset overlay once iris has expanded fully beyond viewport
+        setTimeout(() => {
+          setIsTransitioning(false);
+          setTransitionStage('idle');
+          setTargetTheme(null);
+        }, 560);
+      }, 70);
+    }, 520);
   };
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, isLoading }}>
+    <ThemeContext.Provider value={{ 
+      theme, 
+      toggleTheme, 
+      isLoading,
+      isTransitioning,
+      transitionStage,
+      targetTheme
+    }}>
       {children}
+      <VignetteThemeTransition 
+        isTransitioning={isTransitioning}
+        stage={transitionStage}
+        targetTheme={targetTheme || theme}
+      />
     </ThemeContext.Provider>
   );
 }
