@@ -324,30 +324,45 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flexWrap: 'wrap' }}>
-          {/* Guiding Arrow 2: Pointing at Continue to Recipients */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            color: 'var(--accent)',
-            fontSize: '13px',
-            fontWeight: '600',
-            opacity: isVerified ? 1 : 0,
-            transform: isVerified ? 'translateX(0)' : 'translateX(-8px)',
-            transition: 'opacity 0.4s ease, transform 0.4s ease',
-            pointerEvents: 'none',
-            whiteSpace: 'nowrap',
-            animation: isVerified ? 'bounceRightSoft 1.2s ease-in-out infinite' : 'none'
-          }}>
-            <span>Click here to continue</span>
-            <ArrowRight size={15} />
-          </div>
+          {/* Guide text area - fixed width so the button never shifts */}
+          <div style={{ position: 'relative', minWidth: '180px', height: '20px' }}>
+            {/* Guiding Arrow: slides in when verified */}
+            <div style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              color: 'var(--accent)',
+              fontSize: '13px',
+              fontWeight: '600',
+              opacity: isVerified ? 1 : 0,
+              transform: isVerified ? 'translateX(0)' : 'translateX(-8px)',
+              transition: 'opacity 0.4s ease, transform 0.4s ease',
+              pointerEvents: 'none',
+              whiteSpace: 'nowrap',
+              animation: isVerified ? 'bounceRightSoft 1.2s ease-in-out infinite' : 'none'
+            }}>
+              <span>Click here to continue</span>
+              <ArrowRight size={15} />
+            </div>
 
-          {!isVerified && (
-            <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
+            {/* Fallback hint: fades out when verified */}
+            <span style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              fontSize: '13px',
+              color: 'var(--text-muted)',
+              whiteSpace: 'nowrap',
+              opacity: isVerified ? 0 : 1,
+              transition: 'opacity 0.3s ease',
+              pointerEvents: 'none'
+            }}>
               Test your Gmail connection first.
             </span>
-          )}
+          </div>
 
           <button
             type="button"
