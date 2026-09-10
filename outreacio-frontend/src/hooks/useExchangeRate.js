@@ -39,9 +39,9 @@ export function useExchangeRate() {
           clearTimeout(timeoutId);
           if (res.ok) {
             const data = await res.json();
-            if (data?.usdToInrRate && data.usdToInrRate > 50 && data.usdToInrRate < 200) {
+            if (data?.usdToInrRate && data.usdToInrRate > 50 && data.usdToInrRate < 200 && data.usdToInrRate !== 85) {
               resolvedRate = data.usdToInrRate;
-            } else if (data?.plans?.pro?.priceINR) {
+            } else if (data?.plans?.pro?.priceINR && data.plans.pro.priceINR !== 425) {
               resolvedRate = data.plans.pro.priceINR / 4.99;
             }
           }
