@@ -115,7 +115,7 @@ export default function ContactPage({ onLaunchApp }) {
             ) : (
               <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', marginBottom: '5px' }}>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', marginBottom: '5px', color: 'var(--text-primary)' }}>
                     Your Name *
                   </label>
                   <input
@@ -130,6 +130,7 @@ export default function ContactPage({ onLaunchApp }) {
                       borderRadius: '8px',
                       border: '1px solid var(--border)',
                       background: 'var(--bg-surface)',
+                      color: 'var(--text-primary)',
                       fontSize: '14px',
                       outline: 'none'
                     }}
@@ -137,7 +138,7 @@ export default function ContactPage({ onLaunchApp }) {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', marginBottom: '5px' }}>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', marginBottom: '5px', color: 'var(--text-primary)' }}>
                     Email Address *
                   </label>
                   <input
@@ -152,6 +153,7 @@ export default function ContactPage({ onLaunchApp }) {
                       borderRadius: '8px',
                       border: '1px solid var(--border)',
                       background: 'var(--bg-surface)',
+                      color: 'var(--text-primary)',
                       fontSize: '14px',
                       outline: 'none'
                     }}
@@ -159,7 +161,7 @@ export default function ContactPage({ onLaunchApp }) {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', marginBottom: '5px' }}>
+                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: '600', marginBottom: '5px', color: 'var(--text-primary)' }}>
                     How can we help? *
                   </label>
                   <textarea
@@ -174,6 +176,7 @@ export default function ContactPage({ onLaunchApp }) {
                       borderRadius: '8px',
                       border: '1px solid var(--border)',
                       background: 'var(--bg-surface)',
+                      color: 'var(--text-primary)',
                       fontSize: '14px',
                       outline: 'none',
                       resize: 'vertical'

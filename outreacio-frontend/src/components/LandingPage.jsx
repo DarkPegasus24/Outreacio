@@ -1047,7 +1047,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact, onRequireA
       </section>
 
       {/* 7. Reusable Final CTA Banner Section */}
-      <CtaBannerSection onLaunchApp={onLaunchApp} />
+      <CtaBannerSection onLaunchApp={onLaunchApp} user={user} />
 
       {/* Upgrade Modal */}
       <UpgradeModal
