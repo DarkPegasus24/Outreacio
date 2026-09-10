@@ -86,6 +86,7 @@ export default function RecipientManager({ recipients, onUpdateRecipients, onBac
   const [searchFilter, setSearchFilter] = useState('');
   const [isParsing, setIsParsing] = useState(false);
   const [uploadError, setUploadError] = useState(null);
+  const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
 
   const handleFileUpload = (e) => {
@@ -198,18 +199,31 @@ export default function RecipientManager({ recipients, onUpdateRecipients, onBac
       </div>
 
       {/* Upload Box */}
-      <div style={{
-        border: '2px dashed var(--border-strong)',
-        borderRadius: 'var(--radius-lg)',
-        padding: '28px 20px',
-        textAlign: 'center',
-        background: 'var(--bg-white)',
-        marginBottom: '18px',
-        cursor: isParsing ? 'wait' : 'pointer',
-        transition: 'all 0.2s ease',
-        opacity: isParsing ? 0.7 : 1
-      }}
-      onClick={() => !isParsing && fileInputRef.current?.click()}
+      <div
+        style={{
+          border: `2px dashed ${isDragging ? 'var(--accent)' : 'var(--border-strong)'}`,
+          borderRadius: 'var(--radius-lg)',
+          padding: '28px 20px',
+          textAlign: 'center',
+          background: isDragging ? 'var(--accent-light)' : 'var(--bg-white)',
+          marginBottom: '18px',
+          cursor: isParsing ? 'wait' : 'pointer',
+          transition: 'all 0.2s ease',
+          opacity: isParsing ? 0.7 : 1,
+          transform: isDragging ? 'scale(1.01)' : 'scale(1)'
+        }}
+        onClick={() => !isParsing && fileInputRef.current?.click()}
+        onDrop={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setIsDragging(false);
+          if (isParsing) return;
+          const file = e.dataTransfer.files?.[0];
+          if (file) handleFileUpload({ target: { files: [file] } });
+        }}
+        onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); if (!isParsing) setIsDragging(true); }}
+        onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); if (!isParsing) setIsDragging(true); }}
+        onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
       >
         <input
           type="file"
