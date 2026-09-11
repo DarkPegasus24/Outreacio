@@ -14,10 +14,14 @@ import {
 } from 'lucide-react';
 
 export default function AdminPaymentsPage({ onNavigateHome }) {
-  const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem('outreacio_admin_key') || '');
+  const [adminKey, setAdminKey] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    return localStorage.getItem('outreacio_admin_key') || sessionStorage.getItem('outreacio_admin_key') || '';
+  });
   const [keyInput, setKeyInput] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState('Verifying credentials...');
   
   // Section Navigation
   const [mainSection, setMainSection] = useState('payments'); // 'payments' | 'contacts'
@@ -54,10 +58,14 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
     "Duplicate transaction UTR reference already processed."
   ];
 
-  const loadData = async (keyToUse) => {
+  const loadData = async (keyToUse, retriesLeft = 2, delayMs = 2500) => {
     const key = keyToUse ?? adminKey;
+    if (!key) return;
+
     setLoading(true);
     setError('');
+    setLoadingMessage(retriesLeft < 2 ? `Waking up server, retrying (${2 - retriesLeft}/2)...` : 'Connecting & verifying credentials...');
+
     try {
       const [paymentData, contactData] = await Promise.all([
         fetchAdminPayments(key).catch(e => { throw e; }),
@@ -74,6 +82,23 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
         setContactStats(contactData.stats || { total: 0, unread: 0, read: 0, replied: 0 });
       }
     } catch (err) {
+      const errMsg = (err?.message || '').toLowerCase();
+      const isRetryable = retriesLeft > 0 && (
+        errMsg.includes('failed to fetch') ||
+        errMsg.includes('networkerror') ||
+        errMsg.includes('502') ||
+        errMsg.includes('503') ||
+        errMsg.includes('504') ||
+        errMsg.includes('timeout') ||
+        errMsg.includes('load failed')
+      );
+
+      if (isRetryable) {
+        setLoadingMessage(`Server is waking up (cold start)... Retrying in ${Math.round(delayMs / 1000)}s`);
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+        return loadData(key, retriesLeft - 1, delayMs * 1.5);
+      }
+
       setIsAuthenticated(false);
       setError(err.message || 'Authentication failed. Please check your admin key.');
     } finally {
@@ -91,13 +116,19 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
     e.preventDefault();
     if (!keyInput.trim()) return;
     const cleanKey = keyInput.trim();
-    sessionStorage.setItem('outreacio_admin_key', cleanKey);
+    try {
+      localStorage.setItem('outreacio_admin_key', cleanKey);
+      sessionStorage.setItem('outreacio_admin_key', cleanKey);
+    } catch (_) {}
     setAdminKey(cleanKey);
     loadData(cleanKey);
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem('outreacio_admin_key');
+    try {
+      localStorage.removeItem('outreacio_admin_key');
+      sessionStorage.removeItem('outreacio_admin_key');
+    } catch (_) {}
     setAdminKey('');
     setIsAuthenticated(false);
     setSubmissions([]);
@@ -379,7 +410,7 @@ export default function AdminPaymentsPage({ onNavigateHome }) {
               {loading ? (
                 <>
                   <RefreshCw size={16} className="animate-spin" />
-                  <span>Verifying Credentials…</span>
+                  <span>{loadingMessage}</span>
                 </>
               ) : (
                 <>
