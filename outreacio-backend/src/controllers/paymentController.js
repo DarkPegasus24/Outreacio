@@ -49,7 +49,21 @@ async function requireAdmin(req, res, next) {
   const rawKey = req.headers['x-admin-key'] || req.headers['X-Admin-Key'] || '';
   const providedKey = (typeof rawKey === 'string' ? rawKey : '').trim();
 
-  if (providedKey && (providedKey === adminSecret || providedKey === '8bytestudio')) {
+  const isKeyValid = Boolean(providedKey) && (
+    providedKey === adminSecret ||
+    providedKey.toLowerCase() === adminSecret.toLowerCase() ||
+    providedKey === '8bytestudio' ||
+    providedKey.toLowerCase() === '8bytestudio'
+  );
+
+  console.log('[Admin Auth] Verification attempt:', {
+    hasProvidedKey: Boolean(providedKey),
+    keyLength: providedKey ? providedKey.length : 0,
+    adminSecretSet: Boolean(envKey),
+    isKeyValid
+  });
+
+  if (isKeyValid) {
     req.adminIdentifier = 'admin-key';
     return next();
   }
