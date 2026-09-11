@@ -1,6 +1,8 @@
 const path = require('path');
 const fs = require('fs');
+const crypto = require('crypto');
 const multer = require('multer');
+const FileType = require('file-type');
 const supabase = require('../../supabaseClient');
 const { sendPaymentApprovedEmail, sendPaymentRejectedEmail } = require('../services/emailService');
 
@@ -45,23 +47,24 @@ const upload = multer({
  */
 async function requireAdmin(req, res, next) {
   const envKey = (process.env.ADMIN_SECRET_KEY || '').trim().replace(/^['"]|['"]$/g, '');
-  const adminSecret = envKey || '8bytestudio';
+  if (!envKey) {
+    console.error('[Admin Auth] ADMIN_SECRET_KEY is not configured on server.');
+    return res.status(500).json({
+      error: 'Server misconfiguration: ADMIN_SECRET_KEY is not set.'
+    });
+  }
+
   const rawKey = req.headers['x-admin-key'] || req.headers['X-Admin-Key'] || '';
   const providedKey = (typeof rawKey === 'string' ? rawKey : '').trim();
 
-  const isKeyValid = Boolean(providedKey) && (
-    providedKey === adminSecret ||
-    providedKey.toLowerCase() === adminSecret.toLowerCase() ||
-    providedKey === '8bytestudio' ||
-    providedKey.toLowerCase() === '8bytestudio'
-  );
-
-  console.log('[Admin Auth] Verification attempt:', {
-    hasProvidedKey: Boolean(providedKey),
-    keyLength: providedKey ? providedKey.length : 0,
-    adminSecretSet: Boolean(envKey),
-    isKeyValid
-  });
+  let isKeyValid = false;
+  if (providedKey) {
+    const providedBuf = Buffer.from(providedKey, 'utf8');
+    const secretBuf = Buffer.from(envKey, 'utf8');
+    if (providedBuf.length === secretBuf.length && crypto.timingSafeEqual(providedBuf, secretBuf)) {
+      isKeyValid = true;
+    }
+  }
 
   if (isKeyValid) {
     req.adminIdentifier = 'admin-key';
@@ -80,7 +83,7 @@ async function requireAdmin(req, res, next) {
           .map(e => e.trim().toLowerCase())
           .filter(Boolean);
 
-        // If no ADMIN_EMAILS configured or user is in list
+        // If ADMIN_EMAILS configured and user is in list
         if (adminEmails.length > 0 && adminEmails.includes(data.user.email.toLowerCase())) {
           req.adminIdentifier = data.user.email;
           return next();
@@ -133,18 +136,30 @@ function createPaymentController(PLANS) {
           if (userRecord) userId = userRecord.id;
         }
 
-        // Generate screenshot URL
+        // Generate screenshot URL & validate actual file content magic bytes
         let screenshotUrl = null;
         if (req.file) {
+          const fileBuffer = fs.readFileSync(req.file.path);
+          const detectedType = await FileType.fromBuffer(fileBuffer);
+          const allowedMimeTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+          if (!detectedType || !allowedMimeTypes.includes(detectedType.mime)) {
+            try {
+              fs.unlinkSync(req.file.path);
+            } catch (_) {}
+            return res.status(400).json({
+              error: 'Uploaded file content is not a valid image. Only genuine JPG, PNG, and WebP images are allowed.'
+            });
+          }
+
           screenshotUrl = `/uploads/screenshots/${req.file.filename}`;
 
           // Also attempt upload to Supabase Storage if bucket exists
           try {
-            const fileBuffer = fs.readFileSync(req.file.path);
             const { data: storageData, error: storageErr } = await supabase.storage
               .from('payment-screenshots')
               .upload(`proofs/${req.file.filename}`, fileBuffer, {
-                contentType: req.file.mimetype,
+                contentType: detectedType.mime,
                 upsert: true
               });
 

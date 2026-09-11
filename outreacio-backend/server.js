@@ -12,10 +12,52 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
+const rateLimit = require('express-rate-limit');
 const supabase = require('./supabaseClient');
+
+// Production & Secret Environment Validations (Fail closed on startup)
+const isProduction = process.env.NODE_ENV === 'production';
+
+// 1. JWT_SECRET startup validation (Fix 9)
+if (!process.env.JWT_SECRET || !process.env.JWT_SECRET.trim()) {
+  throw new Error('[FATAL] JWT_SECRET environment variable is missing. Server refusing to start.');
+}
+const JWT_SECRET = process.env.JWT_SECRET.trim();
+
+// 2. ADMIN_SECRET_KEY startup validation (Fix 2)
+if (!process.env.ADMIN_SECRET_KEY || !process.env.ADMIN_SECRET_KEY.trim()) {
+  throw new Error('[FATAL] ADMIN_SECRET_KEY environment variable is missing. Server refusing to start.');
+}
+
+// 3. GOOGLE_CLIENT_ID startup validation in production (Fix 1)
+const rawGoogleClientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
+if (isProduction) {
+  if (!rawGoogleClientId || rawGoogleClientId.includes('sample') || rawGoogleClientId.includes('placeholder')) {
+    throw new Error('[FATAL] Valid GOOGLE_CLIENT_ID is required in production environment. Server refusing to start.');
+  }
+}
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+// Rate Limiters (Fix 8)
+// Strict limiter for sensitive / authentication / admin / csrf endpoints (10 req/min)
+const strictLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please slow down and try again in a minute.' }
+});
+
+// Moderate limiter for bulk sending & contact form submissions (30 req/min)
+const moderateLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Request rate limit exceeded. Please wait a moment before trying again.' }
+});
 
 // Global safety net: log unexpected errors instead of letting Node crash the
 // whole process (which would take the server down until Fly restarts it,
@@ -28,10 +70,32 @@ process.on('uncaughtException', (err) => {
   console.error('[UncaughtException]', err);
 });
 
-// Security & Core Middleware (Must be before all routes)
+// Security & Core Middleware (Fix 5)
 app.use(helmet({
-  contentSecurityPolicy: false,
-  crossOriginResourcePolicy: false
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "https://accounts.google.com"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "blob:", "https:", "http:"],
+      connectSrc: [
+        "'self'",
+        "https://*.supabase.co",
+        "https://accounts.google.com",
+        "https://api.exchangerate-api.com",
+        "https://open.er-api.com",
+        "https://outreacio-backend.fly.dev",
+        "http://localhost:5000",
+        "https://outreacio.vercel.app",
+        "http://localhost:5173"
+      ],
+      frameSrc: ["'self'", "https://accounts.google.com"],
+      objectSrc: ["'none'"],
+      upgradeInsecureRequests: isProduction ? [] : null
+    }
+  },
+  crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(cors({
   origin: [
@@ -46,7 +110,14 @@ app.use(cookieParser());
 app.use(express.json({ limit: '30mb' }));
 app.use(express.urlencoded({ extended: true, limit: '30mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
+
+// Uploads route with Content-Disposition: attachment & strict CSP (Fix 6)
+app.use('/uploads', (req, res, next) => {
+  res.setHeader('Content-Disposition', 'attachment');
+  res.setHeader('Content-Security-Policy', "default-src 'none'; script-src 'none'; style-src 'none'; img-src 'self'; sandbox;");
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  next();
+}, express.static(path.join(__dirname, 'public/uploads')));
 
 // ==== Plan Configuration (Email-Focused: Free Tier & $4.99 Paid Plan) ====
 const PLANS = {
@@ -152,20 +223,20 @@ const paymentController = createPaymentController(PLANS);
 // ==== Contact Page & Customer Inquiries Handling ====
 const contactController = require('./src/controllers/contactController');
 
-// 1. Submit contact inquiry
-app.post('/api/contact', contactController.submitContact);
+// 1. Submit contact inquiry (moderate rate limit)
+app.post('/api/contact', moderateLimiter, contactController.submitContact);
 
-// 2. Admin: Get all contact inquiries
-app.get('/api/admin/contacts', requireAdmin, contactController.getAdminContacts);
+// 2. Admin: Get all contact inquiries (strict rate limit)
+app.get('/api/admin/contacts', strictLimiter, requireAdmin, contactController.getAdminContacts);
 
-// 3. Admin: Update contact inquiry status (unread/read/replied)
-app.patch('/api/admin/contacts/:id/status', requireAdmin, contactController.updateContactStatus);
+// 3. Admin: Update contact inquiry status (strict rate limit)
+app.patch('/api/admin/contacts/:id/status', strictLimiter, requireAdmin, contactController.updateContactStatus);
 
-// 4. Admin: Delete contact inquiry
-app.delete('/api/admin/contacts/:id', requireAdmin, contactController.deleteContact);
+// 4. Admin: Delete contact inquiry (strict rate limit)
+app.delete('/api/admin/contacts/:id', strictLimiter, requireAdmin, contactController.deleteContact);
 
-// 1. Submit manual payment proof (Multipart: fields + screenshot file)
-app.post('/api/payments/submit', paymentController.uploadMiddleware, async (req, res) => {
+// 1. Submit manual payment proof (Multipart: fields + screenshot file) with verifyCsrf (Fix 7)
+app.post('/api/payments/submit', verifyCsrf, paymentController.uploadMiddleware, async (req, res) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.startsWith('Bearer ') ? authHeader.substring(7) : null;
   if (token) {
@@ -182,71 +253,11 @@ app.post('/api/payments/submit', paymentController.uploadMiddleware, async (req,
   return paymentController.submitPayment(req, res);
 });
 
-// 2. Admin: Get all submissions and metrics
-app.get('/api/admin/payments', requireAdmin, paymentController.getAdminPayments);
+// 2. Admin: Get all submissions and metrics (strict rate limit)
+app.get('/api/admin/payments', strictLimiter, requireAdmin, paymentController.getAdminPayments);
 
-// 3. Admin: Review submission (Approve / Reject)
-app.post('/api/admin/payments/:id/review', requireAdmin, paymentController.reviewPayment);
-
-// Helper to get plan limits for a user
-async function getUserPlanLimits(userId) {
-  const { data: user, error } = await supabase
-    .from('users')
-    .select('plan_id')
-    .eq('id', userId)
-    .single();
-  if (error || !user) return PLANS.free.limits; // default to free
-  const planKey = user.plan_id || 'free';
-  return (PLANS[planKey] && PLANS[planKey].limits) || PLANS.free.limits;
-}
-
-// ==== Upgrade Plan Endpoint (shortcut payment – stores payment info) ====
-app.post('/api/upgrade-plan', verifyCsrf, requireSupabaseUser, async (req, res) => {
-  const { planId, paymentInfo = {} } = req.body;
-  if (!planId || !PLANS[planId]) {
-    return res.status(400).json({ error: 'Invalid plan selected.' });
-  }
-  try {
-    // 1. Update user plan_id and reset usage counters
-    const { error: updError } = await supabase
-      .from('users')
-      .update({
-        plan_id: planId,
-        send_today_count: 0,
-        verification_today_count: 0,
-        ai_credits_used: 0
-      })
-      .eq('id', req.userId);
-    if (updError) throw updError;
-
-    // 2. Insert subscription record with payment info
-    const { error: subError } = await supabase
-      .from('subscriptions')
-      .insert([{
-        user_id: req.userId,
-        plan_id: planId,
-        status: 'active',
-        started_at: new Date().toISOString(),
-        expires_at: null,
-        payer_name: paymentInfo.payer_name || null,
-        payer_email: paymentInfo.payer_email || null,
-        payment_reference: paymentInfo.payment_reference || null,
-        qr_image_url: paymentInfo.qr_image_url || null
-      }]);
-    if (subError) {
-      // Log but don't fail the whole request – subscription table may not exist yet
-      console.warn('Subscriptions insert warning:', subError.message);
-    }
-
-    // 3. Email/console notification
-    console.log(`[Upgrade] User ${req.userEmail} upgraded to ${PLANS[planId].name}. Payment ref: ${paymentInfo.payment_reference || 'N/A'}`);
-
-    return res.json({ success: true, message: `Upgraded to ${PLANS[planId].name}`, plan: PLANS[planId] });
-  } catch (err) {
-    console.error('Upgrade plan error:', err);
-    return res.status(500).json({ error: 'Failed to upgrade plan.' });
-  }
-});
+// 3. Admin: Review submission (Approve / Reject) (strict rate limit)
+app.post('/api/admin/payments/:id/review', strictLimiter, requireAdmin, paymentController.reviewPayment);
 
 // ==== GET /api/account/plan – return current plan for logged-in user ====
 app.get('/api/account/plan', requireSupabaseUser, async (req, res) => {
@@ -292,6 +303,19 @@ app.get('/api/account/usage', requireSupabaseUser, async (req, res) => {
     return res.status(500).json({ error: 'Failed to fetch usage.' });
   }
 });
+
+// Helper to get plan limits for a user
+async function getUserPlanLimits(userId) {
+  if (!userId) return PLANS.free.limits;
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('plan_id')
+    .eq('id', userId)
+    .single();
+  if (error || !user) return PLANS.free.limits; // default to free
+  const planKey = user.plan_id || 'free';
+  return (PLANS[planKey] && PLANS[planKey].limits) || PLANS.free.limits;
+}
 
 // ==== Middleware to enforce send limits ====
 async function enforceSendLimits(req, res, next) {
@@ -347,7 +371,6 @@ cron.schedule('5 0 1 * *', async () => {
 
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
-const JWT_SECRET = process.env.JWT_SECRET || 'outreacio-jwt-session-secret-default-2026';
 
 // Maximum recipients allowed per batch job to avoid runaway memory/abuse
 const MAX_RECIPIENTS_LIMIT = 10000;
@@ -358,8 +381,8 @@ const activeJobs = new Map();
 // Session CSRF Token Store
 const validCsrfTokens = new Set();
 
-// Generate / retrieve CSRF token
-app.get('/api/csrf-token', (req, res) => {
+// Generate / retrieve CSRF token (strict rate limit)
+app.get('/api/csrf-token', strictLimiter, (req, res) => {
     const token = crypto.randomBytes(32).toString('hex');
     validCsrfTokens.add(token);
     // Auto-expire token after 2 hours
@@ -407,7 +430,7 @@ function isValidEmail(email) {
     return re.test(email.trim());
 }
 
-// Helper to create Gmail Nodemailer transporter (Gmail-Only)
+// Helper to create Gmail Nodemailer transporter (Gmail-Only with strict TLS certificate verification)
 function createGmailTransporter(user, pass, port = 465, secure = true) {
     return nodemailer.createTransport({
         host: 'smtp.gmail.com',
@@ -421,10 +444,7 @@ function createGmailTransporter(user, pass, port = 465, secure = true) {
         family: 4, // Force IPv4 to prevent hanging on IPv6 in Docker / Railway containers
         connectionTimeout: 8000,
         greetingTimeout: 7000,
-        socketTimeout: 10000,
-        tls: {
-            rejectUnauthorized: false
-        }
+        socketTimeout: 10000
     });
 }
 
@@ -506,8 +526,8 @@ const handleVerifyGmail = async (req, res) => {
 app.post('/api/verify-smtp', verifyCsrf, handleVerifyGmail);
 app.post('/api/test-smtp', verifyCsrf, handleVerifyGmail);
 
-// 2. Start Bulk Send Batch Job
-app.post('/api/send-batch', verifyCsrf, requireSupabaseUser, enforceSendLimits, async (req, res) => {
+// 2. Start Bulk Send Batch Job (moderate rate limit)
+app.post('/api/send-batch', moderateLimiter, verifyCsrf, requireSupabaseUser, enforceSendLimits, async (req, res) => {
     const {
         smtpConfig,
         senderName,
@@ -889,8 +909,8 @@ app.delete('/api/campaign-history/:id', verifyCsrf, requireSupabaseUser, async (
     }
 });
 
-// 7. Google OAuth Sign-In Endpoint
-app.post('/api/auth/google', async (req, res) => {
+// 7. Google OAuth Sign-In Endpoint (strict rate limit & signature verification)
+app.post('/api/auth/google', strictLimiter, async (req, res) => {
     try {
         const { credential } = req.body;
         if (!credential) {
@@ -898,22 +918,33 @@ app.post('/api/auth/google', async (req, res) => {
         }
 
         let payload;
-        const clientId = process.env.GOOGLE_CLIENT_ID;
+        const clientId = (process.env.GOOGLE_CLIENT_ID || '').trim();
+        const hasValidClientId = Boolean(clientId && !clientId.includes('sample') && !clientId.includes('placeholder'));
 
-        if (clientId && !clientId.includes('sample') && !clientId.includes('placeholder')) {
+        if (hasValidClientId) {
             const ticket = await googleClient.verifyIdToken({
                 idToken: credential,
                 audience: clientId
             });
             payload = ticket.getPayload();
         } else {
-            // Fallback decode for local development
+            if (isProduction) {
+                return res.status(500).json({ error: 'Google OAuth signature verification is misconfigured on the server.' });
+            }
+            console.warn('[SECURITY WARNING] Using unverified JWT decode for Google OAuth. Allowed in development mode only.');
             const decoded = jwt.decode(credential);
-            payload = decoded || {};
+            if (!decoded) {
+                return res.status(400).json({ error: 'Invalid Google credential token payload.' });
+            }
+            payload = decoded;
+        }
+
+        if (!payload || !payload.sub) {
+            return res.status(401).json({ error: 'Unable to verify user identity from token.' });
         }
 
         const user = {
-            id: payload.sub || crypto.randomUUID(),
+            id: payload.sub,
             email: payload.email || 'user@example.com',
             name: payload.name || payload.email?.split('@')[0] || 'User',
             picture: payload.picture || ''
@@ -923,7 +954,7 @@ app.post('/api/auth/google', async (req, res) => {
 
         res.cookie('outreacio_auth_token', token, {
             httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
+            secure: isProduction,
             sameSite: 'lax',
             maxAge: 7 * 24 * 60 * 60 * 1000
         });
