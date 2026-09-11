@@ -1,5 +1,8 @@
 // src/api/planService.js
 // Centralized API helpers for plan & billing operations
+import { API_BASE_URL, getApiUrl } from './config';
+
+export { API_BASE_URL, getApiUrl };
 
 async function getAuthToken() {
   // Import supabase lazily to avoid circular deps
@@ -8,8 +11,9 @@ async function getAuthToken() {
   return session?.access_token || null;
 }
 
-async function authFetch(url, options = {}) {
+async function authFetch(endpoint, options = {}) {
   const token = await getAuthToken();
+  const url = endpoint.startsWith('http') ? endpoint : getApiUrl(endpoint);
   const headers = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -45,7 +49,7 @@ export async function upgradePlan(planId, paymentInfo = {}, csrfToken = '') {
 /** Fetch all available plan definitions */
 export async function fetchPlans() {
   try {
-    const data = await fetch('/api/plans').then(r => r.json());
+    const data = await fetch(getApiUrl('/api/plans')).then(r => r.json());
     if (data && data.plans && Object.keys(data.plans).length > 0) {
       return data.plans;
     }
@@ -98,7 +102,7 @@ export async function submitUpiPaymentProof(formData, csrfToken = '') {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(csrfToken ? { 'x-csrf-token': csrfToken } : {})
   };
-  const res = await fetch('/api/payments/submit', {
+  const res = await fetch(getApiUrl('/api/payments/submit'), {
     method: 'POST',
     headers,
     body: formData // multipart/form-data
@@ -118,7 +122,7 @@ export async function fetchAdminPayments(adminKey = '') {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(adminKey ? { 'x-admin-key': adminKey } : {})
   };
-  const res = await fetch('/api/admin/payments', { headers });
+  const res = await fetch(getApiUrl('/api/admin/payments'), { headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Unauthorized or failed' }));
     throw new Error(err.error || `HTTP ${res.status}`);
@@ -134,7 +138,7 @@ export async function reviewPaymentSubmission(submissionId, decision, reason = '
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(adminKey ? { 'x-admin-key': adminKey } : {})
   };
-  const res = await fetch(`/api/admin/payments/${submissionId}/review`, {
+  const res = await fetch(getApiUrl(`/api/admin/payments/${submissionId}/review`), {
     method: 'POST',
     headers,
     body: JSON.stringify({ decision, reason })
@@ -148,7 +152,7 @@ export async function reviewPaymentSubmission(submissionId, decision, reason = '
 
 /** Submit contact message from Contact Page */
 export async function submitContactMessage({ name, email, message }) {
-  const res = await fetch('/api/contact', {
+  const res = await fetch(getApiUrl('/api/contact'), {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, email, message })
@@ -168,7 +172,7 @@ export async function fetchAdminContacts(adminKey = '') {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(adminKey ? { 'x-admin-key': adminKey } : {})
   };
-  const res = await fetch('/api/admin/contacts', { headers });
+  const res = await fetch(getApiUrl('/api/admin/contacts'), { headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: 'Unauthorized or failed' }));
     throw new Error(err.error || `HTTP ${res.status}`);
@@ -184,7 +188,7 @@ export async function updateAdminContactStatus(contactId, status, adminNotes = '
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(adminKey ? { 'x-admin-key': adminKey } : {})
   };
-  const res = await fetch(`/api/admin/contacts/${contactId}/status`, {
+  const res = await fetch(getApiUrl(`/api/admin/contacts/${contactId}/status`), {
     method: 'PATCH',
     headers,
     body: JSON.stringify({ status, adminNotes })
@@ -204,7 +208,7 @@ export async function deleteAdminContactMessage(contactId, adminKey = '') {
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...(adminKey ? { 'x-admin-key': adminKey } : {})
   };
-  const res = await fetch(`/api/admin/contacts/${contactId}`, {
+  const res = await fetch(getApiUrl(`/api/admin/contacts/${contactId}`), {
     method: 'DELETE',
     headers
   });

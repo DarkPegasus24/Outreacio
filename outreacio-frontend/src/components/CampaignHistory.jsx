@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { History, RefreshCw, Trash2, Search, CheckCircle2, XCircle, Clock, Mail, AlertCircle, Sparkles } from 'lucide-react';
 import { supabase } from '../supabaseClient';
+import { getApiUrl } from '../api/config';
 
 export default function CampaignHistory({ csrfToken, onSwitchToNewCampaign }) {
   const [history, setHistory] = useState([]);
@@ -19,7 +20,7 @@ export default function CampaignHistory({ csrfToken, onSwitchToNewCampaign }) {
     setError(null);
     try {
       const authHeader = await getAuthHeader();
-      const res = await fetch('/api/campaign-history', { headers: { ...authHeader } });
+      const res = await fetch(getApiUrl('/api/campaign-history'), { headers: { ...authHeader } });
       const json = await res.json();
       if (res.ok && json.success) {
         setHistory(json.data || []);
@@ -43,7 +44,7 @@ export default function CampaignHistory({ csrfToken, onSwitchToNewCampaign }) {
     setDeletingId(id);
     try {
       const authHeader = await getAuthHeader();
-      const res = await fetch(`/api/campaign-history/${id}`, {
+      const res = await fetch(getApiUrl(`/api/campaign-history/${id}`), {
         method: 'DELETE',
         headers: {
           'x-csrf-token': csrfToken || '',

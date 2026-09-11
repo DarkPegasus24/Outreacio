@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import UpgradeModal from './UpgradeModal';
-import { fetchCurrentPlan, fetchUsage } from '../api/planService.js';
+import { fetchCurrentPlan, fetchUsage, fetchPlans } from '../api/planService.js';
 import { SkeletonBilling } from './SkeletonLoader';
 
 function UsageMeter({ label, used, limit, color = 'var(--primary)' }) {
@@ -46,11 +46,11 @@ export default function AccountBilling({ csrfToken, onUpgradeSuccess: parentUpgr
       const [plan, usage, plansRaw] = await Promise.all([
         fetchCurrentPlan().catch(() => null),
         fetchUsage().catch(() => null),
-        fetch('/api/plans').then(r => r.json()).then(d => d.plans || {}).catch(() => ({})),
+        fetchPlans().catch(() => ({})),
       ]);
       setPlanData(plan);
       setUsageData(usage);
-      setAllPlans(plansRaw);
+      setAllPlans(plansRaw || {});
     } finally {
       setLoading(false);
     }

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { getApiUrl } from '../api/config';
 
 export function useExchangeRate() {
   const [inrRate, setInrRate] = useState(() => {
@@ -35,7 +36,7 @@ export function useExchangeRate() {
         try {
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 2000);
-          const res = await fetch('/api/plans', { signal: controller.signal });
+          const res = await fetch(getApiUrl('/api/plans'), { signal: controller.signal });
           clearTimeout(timeoutId);
           if (res.ok) {
             const data = await res.json();

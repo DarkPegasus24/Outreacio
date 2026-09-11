@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Eye, EyeOff, CheckCircle2, AlertCircle, RefreshCw, KeyRound, Mail, ShieldCheck, ExternalLink, ArrowRight, ArrowUp } from 'lucide-react';
+import { getApiUrl } from '../api/config';
 
 export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified, onVerifiedChange, onContinue }) {
   const [showPassword, setShowPassword] = useState(false);
@@ -36,7 +37,7 @@ export default function SmtpConfigCard({ config, onChange, csrfToken, isVerified
     setTestResult(null);
 
     try {
-      const response = await fetch('/api/verify-smtp', {
+      const response = await fetch(getApiUrl('/api/verify-smtp'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

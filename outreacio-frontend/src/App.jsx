@@ -17,6 +17,7 @@ import AdminPaymentsPage from './components/AdminPaymentsPage';
 import NotFoundPage from './components/NotFoundPage';
 import { ThemeProvider } from './context/ThemeContext';
 import { supabase } from './supabaseClient';
+import { getApiUrl } from './api/config';
 import './App.css';
 
 export default function App() {
@@ -231,7 +232,7 @@ export default function App() {
       await supabase.auth.signOut();
     } catch (e) {}
     try {
-      await fetch('/api/auth/logout', { method: 'POST' });
+      await fetch(getApiUrl('/api/auth/logout'), { method: 'POST' });
     } catch (e) {}
     try {
       localStorage.removeItem('outreacio_auth_token');
@@ -284,7 +285,7 @@ export default function App() {
   // Fetch CSRF Token on load
   const fetchCsrfToken = async () => {
     try {
-      const res = await fetch('/api/csrf-token');
+      const res = await fetch(getApiUrl('/api/csrf-token'));
       const data = await res.json();
       if (data.csrfToken) {
         setCsrfToken(data.csrfToken);
@@ -382,7 +383,7 @@ export default function App() {
         return;
       }
 
-      const response = await fetch('/api/send-batch', {
+      const response = await fetch(getApiUrl('/api/send-batch'), {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -430,7 +431,7 @@ export default function App() {
       });
 
       // Connect to SSE Endpoint for live progress
-      const sse = new EventSource(`/api/job-stream/${newJobId}`);
+      const sse = new EventSource(getApiUrl(`/api/job-stream/${newJobId}`));
       eventSourceRef.current = sse;
 
       sse.addEventListener('snapshot', (e) => {
@@ -509,7 +510,7 @@ export default function App() {
     if (!jobState.jobId) return;
 
     try {
-      await fetch(`/api/job-cancel/${jobState.jobId}`, {
+      await fetch(getApiUrl(`/api/job-cancel/${jobState.jobId}`), {
         method: 'POST',
         headers: {
           'x-csrf-token': csrfToken
