@@ -2,6 +2,11 @@
 // Centralized API helpers for plan & billing operations
 import { API_BASE_URL, getApiUrl } from './config';
 
+// Debug log for active API configuration
+if (typeof window !== 'undefined') {
+  console.log('[API Config] Using API Base URL:', API_BASE_URL);
+}
+
 export { API_BASE_URL, getApiUrl };
 
 async function getAuthToken() {
