@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import PlanCard from './PlanCard';
 import { submitUpiPaymentProof, upgradePlan } from '../api/planService.js';
 import useExchangeRate from '../hooks/useExchangeRate.js';
@@ -17,6 +18,28 @@ export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans = {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const fileInputRef = useRef(null);
+
+  // Lock body scroll and handle Escape key when modal is open
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    if (window.__lenis) window.__lenis.stop();
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      if (window.__lenis) window.__lenis.start();
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, onClose]);
 
   // Reset & prepare plan when modal opens
   useEffect(() => {
@@ -38,7 +61,7 @@ export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans = {
       setScreenshotPreview('');
       setError('');
     }
-  }, [isOpen, initialPlanKey, plans]);
+  }, [isOpen, initialPlanKey, plans, paidPlanInrPrice]);
 
   if (!isOpen) return null;
 
@@ -138,10 +161,12 @@ export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans = {
     ? (selectedPlan.name.toLowerCase().includes('plan') ? selectedPlan.name : `${selectedPlan.name} Plan`)
     : 'Paid Plan';
 
-  return (
+  const modalContent = (
     <div style={{
-      position: 'fixed', inset: 0, zIndex: 9999999,
-      background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(8px)',
+      position: 'fixed', inset: 0, zIndex: 99999999,
+      background: 'rgba(0,0,0,0.7)',
+      backdropFilter: 'blur(10px)',
+      WebkitBackdropFilter: 'blur(10px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       padding: '16px',
       animation: 'fadeIn 0.2s ease',
@@ -512,6 +537,8 @@ export default function UpgradeModal({ isOpen, onClose, currentPlanId, plans = {
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(modalContent, document.body) : modalContent;
 }
 
 const inputStyle = {
