@@ -289,10 +289,12 @@ export default function App() {
       const data = await res.json();
       if (data.csrfToken) {
         setCsrfToken(data.csrfToken);
+        return data.csrfToken;
       }
     } catch (e) {
       console.error('Failed to get CSRF token', e);
     }
+    return null;
   };
 
   useEffect(() => {
@@ -383,38 +385,60 @@ export default function App() {
         return;
       }
 
-      const response = await fetch(getApiUrl('/api/send-batch'), {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-csrf-token': csrfToken,
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: JSON.stringify({
-          smtpConfig: {
-            user: smtpConfig.user.trim(),
-            pass: smtpConfig.pass.trim()
-          },
-          senderName: smtpConfig.senderName,
-          senderEmail: smtpConfig.user.trim(),
-          subject,
-          bodyHtml,
-          recipients: validRecipients,
-          throttleDelayMs: throttleDelay,
-          attachments: base64Attachments
-        })
-      });
+      // Always grab a fresh CSRF token right before launching, since the
+      // backend (Fly.io) can restart/idle-stop between wizard steps and wipe
+      // its in-memory token store, making the token fetched on page-load stale.
+      const freshToken = await fetchCsrfToken();
+      const tokenToUse = freshToken || csrfToken;
 
-      const data = await response.text().then(text => {
-        if (!text) {
-          throw new Error('Server sent an empty response. This usually means the backend was waking up (cold start) or restarted mid-request. Please wait a few seconds and try again.');
+      const doSendBatch = async (tokenForRequest) => {
+        const res = await fetch(getApiUrl('/api/send-batch'), {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-csrf-token': tokenForRequest,
+            'Authorization': `Bearer ${accessToken}`
+          },
+          body: JSON.stringify({
+            smtpConfig: {
+              user: smtpConfig.user.trim(),
+              pass: smtpConfig.pass.trim()
+            },
+            senderName: smtpConfig.senderName,
+            senderEmail: smtpConfig.user.trim(),
+            subject,
+            bodyHtml,
+            recipients: validRecipients,
+            throttleDelayMs: throttleDelay,
+            attachments: base64Attachments
+          })
+        });
+
+        const body = await res.text().then(text => {
+          if (!text) {
+            throw new Error('Server sent an empty response. This usually means the backend was waking up (cold start) or restarted mid-request. Please wait a few seconds and try again.');
+          }
+          try {
+            return JSON.parse(text);
+          } catch (parseErr) {
+            throw new Error(`Server returned an unexpected response (status ${res.status}). Please try again in a moment.`);
+          }
+        });
+
+        return { res, body };
+      };
+
+      let { res: response, body: data } = await doSendBatch(tokenToUse);
+
+      // If the token was stale (backend restarted between fetch and use),
+      // fetch one more fresh token and retry exactly once before giving up.
+      if (response.status === 403 && /csrf/i.test(data.error || '')) {
+        const retryToken = await fetchCsrfToken();
+        if (retryToken) {
+          ({ res: response, body: data } = await doSendBatch(retryToken));
         }
-        try {
-          return JSON.parse(text);
-        } catch (parseErr) {
-          throw new Error(`Server returned an unexpected response (status ${response.status}). Please try again in a moment.`);
-        }
-      });
+      }
+
       if (!response.ok || !data.success) {
         alert(`Failed to start campaign: ${data.error || data.message || 'Unknown error'}`);
         return;
