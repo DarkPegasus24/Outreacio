@@ -17,9 +17,10 @@ const supabase = require('./supabaseClient');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Security & Core Middleware
+// Security & Core Middleware (Must be before all routes)
 app.use(helmet({
-  crossOriginResourcePolicy: false,
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: false
 }));
 app.use(cors({
   origin: [
@@ -30,10 +31,11 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-admin-key', 'X-Admin-Key', 'x-csrf-token']
 }));
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
+app.use(express.json({ limit: '30mb' }));
+app.use(express.urlencoded({ extended: true, limit: '30mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // ==== Plan Configuration (Email-Focused: Free Tier & $4.99 Paid Plan) ====
 const PLANS = {
@@ -331,22 +333,6 @@ const JWT_SECRET = process.env.JWT_SECRET || 'outreacio-jwt-session-secret-defau
 
 // Maximum recipients allowed per batch job to avoid runaway memory/abuse
 const MAX_RECIPIENTS_LIMIT = 10000;
-
-// Security & Middlewares
-app.use(helmet({
-    contentSecurityPolicy: false // Allow modern UI scripts/styles in dev & production
-}));
-app.use(cors({
-    origin: [
-        'http://localhost:5173',
-        'https://outreacio.vercel.app'
-    ],
-    credentials: true
-}));
-app.use(cookieParser());
-app.use(express.json({ limit: '30mb' }));
-app.use(express.urlencoded({ extended: true, limit: '30mb' }));
-app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // In-Memory Active Jobs Store (zero disk persistence, ephemeral only)
 const activeJobs = new Map();
