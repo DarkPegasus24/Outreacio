@@ -72,7 +72,7 @@ const WhiteCheckIcon = () => (
   </svg>
 );
 
-export default function PricingPage({ onUpgrade, onGetStarted, onNavigateLogin, user, csrfToken }) {
+export default function PricingPage({ onUpgrade, onGetStarted, onNavigateLogin, onNavigateDashboard, user, csrfToken }) {
   const { paidPlanInrPrice } = useExchangeRate();
   const [currency, setCurrency] = useState('USD'); // 'USD' | 'INR'
   const [upgradeModalOpen, setUpgradeModalOpen] = useState(false);
@@ -106,8 +106,16 @@ export default function PricingPage({ onUpgrade, onGetStarted, onNavigateLogin, 
   const handleGetStartedFree = () => {
     if (onGetStarted) {
       onGetStarted();
+    } else if (user) {
+      if (onNavigateDashboard) {
+        onNavigateDashboard();
+      } else {
+        window.location.href = '/dashboard';
+      }
+    } else if (onNavigateLogin) {
+      onNavigateLogin();
     } else {
-      window.location.href = '/dashboard';
+      window.location.href = '/login';
     }
   };
 
@@ -315,7 +323,7 @@ export default function PricingPage({ onUpgrade, onGetStarted, onNavigateLogin, 
               e.currentTarget.style.borderColor = 'var(--border)';
             }}
           >
-            Get Started Free
+            {user ? 'Go to Dashboard' : 'Get Started Free'}
           </button>
         </div>
 

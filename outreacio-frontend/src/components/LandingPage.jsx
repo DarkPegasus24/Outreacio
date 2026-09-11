@@ -181,7 +181,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact, onRequireA
                   <polyline points="9 18 15 12 9 6"></polyline>
                 </svg>
               </div>
-              <span>Get started free</span>
+              <span>{user ? 'Go to Dashboard' : 'Get started free'}</span>
             </button>
           </div>
         </div>
@@ -819,7 +819,7 @@ export default function LandingPage({ onLaunchApp, onNavigateContact, onRequireA
                 e.currentTarget.style.borderColor = 'var(--border)';
               }}
             >
-              Get Started Free
+              {user ? 'Go to Dashboard' : 'Get Started Free'}
             </button>
           </div>
 
