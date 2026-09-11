@@ -17,6 +17,17 @@ const supabase = require('./supabaseClient');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// Global safety net: log unexpected errors instead of letting Node crash the
+// whole process (which would take the server down until Fly restarts it,
+// causing in-flight requests to fail with what browsers misreport as a CORS
+// error, since no response/headers ever get sent).
+process.on('unhandledRejection', (reason) => {
+  console.error('[UnhandledRejection]', reason);
+});
+process.on('uncaughtException', (err) => {
+  console.error('[UncaughtException]', err);
+});
+
 // Security & Core Middleware (Must be before all routes)
 app.use(helmet({
   contentSecurityPolicy: false,
@@ -284,25 +295,32 @@ app.get('/api/account/usage', requireSupabaseUser, async (req, res) => {
 
 // ==== Middleware to enforce send limits ====
 async function enforceSendLimits(req, res, next) {
-  const { recipients } = req.body;
-  if (!Array.isArray(recipients)) {
-    return res.status(400).json({ error: 'Recipients list is required.' });
+  try {
+    const { recipients } = req.body;
+    if (!Array.isArray(recipients)) {
+      return res.status(400).json({ error: 'Recipients list is required.' });
+    }
+    const limits = await getUserPlanLimits(req.userId);
+    const dailyLimit = limits.sendsPerDay;
+    if (dailyLimit !== Infinity && recipients.length > dailyLimit) {
+      return res.status(403).json({
+        error: `LIMIT_REACHED`,
+        type: 'sends',
+        message: `Send limit exceeded. Your plan allows up to ${dailyLimit} emails per day.`
+      });
+    }
+    // Increment send_today_count (best-effort; never let this block or crash the request)
+    try {
+      const { error: incError } = await supabase.rpc('increment_send_count', { uid: req.userId, amount: recipients.length });
+      if (incError) console.error('Failed to increment send count:', incError);
+    } catch (incErr) {
+      console.error('increment_send_count RPC threw:', incErr.message);
+    }
+    next();
+  } catch (err) {
+    console.error('enforceSendLimits crashed:', err);
+    return res.status(500).json({ error: 'Failed to verify send limits. Please try again.' });
   }
-  const limits = await getUserPlanLimits(req.userId);
-  const dailyLimit = limits.sendsPerDay;
-  if (dailyLimit !== Infinity && recipients.length > dailyLimit) {
-    return res.status(403).json({
-      error: `LIMIT_REACHED`,
-      type: 'sends',
-      message: `Send limit exceeded. Your plan allows up to ${dailyLimit} emails per day.`
-    });
-  }
-  // Increment send_today_count
-  const { error: incError } = await supabase.rpc
-    ? await supabase.rpc('increment_send_count', { uid: req.userId, amount: recipients.length }).catch(() => ({}))
-    : await supabase.from('users').update({ send_today_count: (await supabase.from('users').select('send_today_count').eq('id', req.userId).single())?.data?.send_today_count + recipients.length }).eq('id', req.userId);
-  if (incError) console.error('Failed to increment send count:', incError);
-  next();
 }
 
 // ==== Cron Jobs ====
